@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/login_form.dart';
 
 
 void main() {
@@ -15,7 +16,8 @@ class MyApp extends StatelessWidget {
       title: 'Health Body&Mind',
       theme: ThemeData(
         primarySwatch: Colors.green,
-      )
+      ),
+      home: LoginForm(),
     );
   }
 }
