@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/sign_up_part_one.dart';
 
 class LoginForm extends StatelessWidget {
   const LoginForm({super.key});
@@ -84,7 +85,12 @@ class LoginForm extends StatelessWidget {
                 SizedBox(height: 10),
 
                 ElevatedButton(
-                  onPressed: null,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignUpPartOne()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(150, 50),
                     shape: RoundedRectangleBorder(
