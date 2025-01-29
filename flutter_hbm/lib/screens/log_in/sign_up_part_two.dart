@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/main_page.dart';
 
 class SignUpPartTwo extends StatefulWidget {
   const SignUpPartTwo({super.key});
@@ -189,7 +190,12 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                     child: SizedBox(
                       width: 150,
                       child: ElevatedButton(
-                        onPressed: null,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MainPage()),
+                          );
+                        },
                         child: Text("Submit"),
                       ),
                     )
