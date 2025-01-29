@@ -1,88 +1,22 @@
 import 'package:flutter/material.dart';
 import '../widgets/widgets_for_main_page.dart';
 import '../widgets/calendar.dart';
+import '../widgets/main_layout.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(100),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: Colors.white,
-          elevation: 2,
-          flexibleSpace: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Health Body&Mind",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      "Hello, how are you today, Vasko!  :)",
-                      style: TextStyle(
-                        fontSize: 22,
-                        color: Colors.black54,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.notifications, color: Colors.black54),
-                      onPressed: null,
-                    ),
-                    SizedBox(width: 20),
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.grey[300],
-                      child: Icon(Icons.person, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: LayoutBuilder(
+    return AppLayout(
+      child: LayoutBuilder(
         builder: (context, constraints) {
-          double menuWidth = constraints.maxWidth * 0.10;
           double leftSideWidth = constraints.maxWidth * 0.20;
-          double centerSideWidth = constraints.maxWidth * 0.325;
-          double rightSideWidth = constraints.maxWidth * 0.375;
+          double centerSideWidth = constraints.maxWidth * 0.35;
+          double rightSideWidth = constraints.maxWidth * 0.45;
 
           return Row(
             children: [
-              Container(
-                width: menuWidth,
-                color: Colors.grey[200],
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    menuButton("Home Page"),
-                    SizedBox(height: 20),
-                    menuButton("Food"),
-                    SizedBox(height: 20),
-                    menuButton("Exercise"),
-                    SizedBox(height: 20),
-                    menuButton("Charts"),
-                  ],
-                ),
-              ),
               Align(
                 alignment: Alignment.topLeft,
                 child: Container(
@@ -190,23 +124,6 @@ class MainPage extends StatelessWidget {
           );
         }
         ),
-      bottomNavigationBar: Container(
-        color: Colors.grey[200],
-        padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            ElevatedButton.icon(
-              onPressed: null,
-              icon: Icon(Icons.help_outline),
-              label: Text("AI Help"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
