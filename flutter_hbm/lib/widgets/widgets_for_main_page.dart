@@ -1,10 +1,37 @@
 import 'package:flutter/material.dart';
 
-Widget menuButton(String title) {
+import '../screens/charts_page.dart';
+import '../screens/exercise_page.dart';
+import '../screens/food_page.dart';
+import '../screens/main_page.dart';
+
+Widget menuButton(BuildContext context, String title) {
   return Padding(
     padding: EdgeInsets.all(8.0),
     child: TextButton(
-      onPressed: null,
+      onPressed: () {
+        Widget nextPage;
+        switch (title) {
+          case "Home Page":
+            nextPage = MainPage();
+            break;
+          case "Food":
+            nextPage = FoodPage();
+            break;
+          case "Exercise":
+            nextPage = ExercisePage();
+            break;
+          case "Charts":
+            nextPage = ChartsPage();
+            break;
+          default:
+            return;
+        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => nextPage),
+        );
+      },
       child: Text(title, style: TextStyle(fontSize: 18)),
     ),
   );

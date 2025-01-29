@@ -68,13 +68,13 @@ class AppLayout extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  menuButton("Home Page"),
+                  menuButton(context, "Home Page"),
                   SizedBox(height: 20),
-                  menuButton("Food"),
+                  menuButton(context, "Food"),
                   SizedBox(height: 20),
-                  menuButton("Exercise"),
+                  menuButton(context, "Exercise"),
                   SizedBox(height: 20),
-                  menuButton("Charts"),
+                  menuButton(context, "Charts"),
                 ],
               ),
             ),
