@@ -36,9 +36,6 @@ class ExercisePage extends StatelessWidget {
                           flex: 1,
                           child: Container(
                             padding: EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black, width: 1),
-                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -71,7 +68,7 @@ class ExercisePage extends StatelessWidget {
                                   children: [
                                     SizedBox(
                                       width: 150,
-                                      child: Text("(5435) Steps: ", textAlign: TextAlign.right),
+                                      child: Text("(5435) Steps:\nGoal: 8000", textAlign: TextAlign.right),
                                     ),
                                     SizedBox(width: 10),
                                     Flexible(child: TextField(decoration: InputDecoration(border: OutlineInputBorder(), labelText: "optional"))),
@@ -122,9 +119,6 @@ class ExercisePage extends StatelessWidget {
                           flex: 1,
                           child: Container(
                             padding: EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black, width: 1),
-                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
