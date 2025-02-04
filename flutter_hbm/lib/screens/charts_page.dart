@@ -10,8 +10,8 @@ class ChartsPage extends StatefulWidget {
 }
 
 class ChartsPageState extends State<ChartsPage> {
-  String _selectedChart = "Calories Intake";
-  String _selectedPeriod = "Last 7 Days";
+  String selectedChart = "Calories Intake";
+  String selectedPeriod = "Last 7 Days";
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +29,10 @@ class ChartsPageState extends State<ChartsPage> {
                 ),
                 SizedBox(width: 10),
                 DropdownButton<String>(
-                  value: _selectedChart,
+                  value: selectedChart,
                   onChanged: (String? newValue) {
                     setState(() {
-                      _selectedChart = newValue!;
+                      selectedChart = newValue!;
                     });
                   },
                   items: [
@@ -57,12 +57,12 @@ class ChartsPageState extends State<ChartsPage> {
                 SizedBox(width: 10),
                 ToggleButtons(
                   isSelected: [
-                    _selectedPeriod == "Last 7 Days",
-                    _selectedPeriod == "Last 30 Days"
+                    selectedPeriod == "Last 7 Days",
+                    selectedPeriod == "Last 30 Days"
                   ],
                   onPressed: (int index) {
                     setState(() {
-                      _selectedPeriod = index == 0 ? "Last 7 Days" : "Last 30 Days";
+                      selectedPeriod = index == 0 ? "Last 7 Days" : "Last 30 Days";
                     });
                   },
                   borderRadius: BorderRadius.circular(5),

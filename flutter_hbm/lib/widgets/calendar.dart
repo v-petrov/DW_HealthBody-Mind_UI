@@ -4,10 +4,10 @@ class DateSelectionWidget extends StatefulWidget {
   const DateSelectionWidget({super.key});
 
   @override
-  _DateSelectionWidgetState createState() => _DateSelectionWidgetState();
+  DateSelectionWidgetState createState() => DateSelectionWidgetState();
 }
 
-class _DateSelectionWidgetState extends State<DateSelectionWidget> {
+class DateSelectionWidgetState extends State<DateSelectionWidget> {
   DateTime selectedDate = DateTime.now();
 
   void updateDate(int days) {
