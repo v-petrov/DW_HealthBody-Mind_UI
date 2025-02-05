@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/widgets/widgets_for_main_page.dart';
 
+import '../screens/profile_settings.dart';
+
 class AppLayout extends StatelessWidget {
   final Widget child;
 
@@ -47,10 +49,18 @@ class AppLayout extends StatelessWidget {
                       onPressed: null,
                     ),
                     SizedBox(width: 20),
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.grey[300],
-                      child: Icon(Icons.person, color: Colors.white),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+                        );
+                      },
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.grey[300],
+                        child: Icon(Icons.person, color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
