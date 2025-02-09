@@ -22,10 +22,11 @@ Widget buildTextFieldWithLabel(String label, String suffix) {
     child: Row(
       children: [
         Expanded(
+          flex: 2,
           child: Text(label, style: TextStyle(fontSize: 14)),
         ),
-        SizedBox(
-          width: 276,
+        Expanded(
+          flex: 3,
           child: TextField(
             readOnly: true,
             enabled: false,
@@ -88,6 +89,7 @@ Widget buildProfileField(String label, String value) {
   return Padding(
     padding: const EdgeInsets.only(bottom: 8.0),
     child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
           width: 90,
