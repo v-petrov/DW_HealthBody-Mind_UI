@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/widgets/vertical_scroll.dart';
 import 'package:flutter_hbm/widgets/widgets_for_main_page.dart';
 
 import '../screens/profile_settings.dart';
 
 class AppLayout extends StatelessWidget {
   final Widget child;
-
   const AppLayout({super.key, required this.child});
 
   @override
@@ -73,19 +73,22 @@ class AppLayout extends StatelessWidget {
         child: Row(
           children: [
             Container(
+              height: double.infinity,
               width: 180,
               color: Colors.grey[200],
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  menuButton(context, "Home Page"),
-                  SizedBox(height: 20),
-                  menuButton(context, "Food"),
-                  SizedBox(height: 20),
-                  menuButton(context, "Exercise"),
-                  SizedBox(height: 20),
-                  menuButton(context, "Charts"),
-                ],
+              child: VerticalScrollable(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    menuButton(context, "Home Page"),
+                    SizedBox(height: 20),
+                    menuButton(context, "Food"),
+                    SizedBox(height: 20),
+                    menuButton(context, "Exercise"),
+                    SizedBox(height: 20),
+                    menuButton(context, "Charts"),
+                  ],
+                ),
               ),
             ),
             Expanded(child: child),
