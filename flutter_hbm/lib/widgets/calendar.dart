@@ -16,7 +16,7 @@ class DateSelectionWidgetState extends State<DateSelectionWidget> {
     });
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
@@ -70,7 +70,7 @@ class DateSelectionWidgetState extends State<DateSelectionWidget> {
             ),
           ),
           InkWell(
-            onTap: () => _selectDate(context),
+            onTap: () => selectDate(context),
             child: Padding(
               padding: EdgeInsets.only(left: 5),
               child: Icon(Icons.calendar_today, color: Colors.blue),

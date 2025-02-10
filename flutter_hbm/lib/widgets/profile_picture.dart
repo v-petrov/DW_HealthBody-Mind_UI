@@ -14,7 +14,7 @@ class ProfilePictureWidgetState extends State<ProfilePictureWidget> {
   File? image;
   Uint8List? webImage;
 
-  Future<void> _pickImage() async {
+  Future<void> pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
@@ -46,7 +46,7 @@ class ProfilePictureWidgetState extends State<ProfilePictureWidget> {
         ),
         SizedBox(height: 10),
         ElevatedButton(
-          onPressed: _pickImage,
+          onPressed: pickImage,
           child: Text("Edit Photo"),
         ),
       ],
