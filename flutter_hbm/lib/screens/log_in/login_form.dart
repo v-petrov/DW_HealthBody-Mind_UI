@@ -21,7 +21,7 @@ class LoginForm extends StatelessWidget {
               width: 350,
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border.all(color: Colors.black, width: 2.0),
+                border: Border.all(color: Colors.black, width: 2),
                 borderRadius: BorderRadius.circular(10),
               ),
               padding: const EdgeInsets.all(20.0),
