@@ -1,5 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/widgets/horizontal_scroll.dart';
+import 'package:flutter_hbm/widgets/vertical_scroll.dart';
 import '../widgets/main_layout.dart';
 
 class ChartsPage extends StatefulWidget {
@@ -16,77 +18,96 @@ class ChartsPageState extends State<ChartsPage> {
   @override
   Widget build(BuildContext context) {
     return AppLayout(
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          double minWidth = 1000;
+          double screenWidth = constraints.maxWidth < minWidth
+              ? minWidth
+              : constraints.maxWidth;
+          double screenHeight = constraints.maxHeight;
+
+          return HorizontalScrollable(
+            child: Row(
               children: [
-                Text(
-                  "Choose a chart: ",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(width: 10),
-                DropdownButton<String>(
-                  value: selectedChart,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedChart = newValue!;
-                    });
-                  },
-                  items: [
-                    "Calories Intake",
-                    "Burned Calories",
-                    "Kilograms",
-                    "Carbs",
-                    "Fat",
-                    "Protein"
-                  ].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                Spacer(),
-                Text(
-                  "Period: ",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(width: 10),
-                ToggleButtons(
-                  isSelected: [
-                    selectedPeriod == "Last 7 Days",
-                    selectedPeriod == "Last 30 Days"
-                  ],
-                  onPressed: (int index) {
-                    setState(() {
-                      selectedPeriod = index == 0 ? "Last 7 Days" : "Last 30 Days";
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(5),
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text("Last 7 days"),
+                Container(
+                  padding: EdgeInsets.all(10),
+                  width: screenWidth,
+                  height: screenHeight,
+                  child: VerticalScrollable(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              "Choose a chart: ",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(width: 10),
+                            DropdownButton<String>(
+                              value: selectedChart,
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedChart = newValue!;
+                                });
+                              },
+                              items: [
+                                "Calories Intake",
+                                "Burned Calories",
+                                "Kilograms",
+                                "Carbs",
+                                "Fat",
+                                "Protein"
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                            ),
+                            Spacer(),
+                            Text(
+                              "Period: ",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(width: 10),
+                            ToggleButtons(
+                              isSelected: [
+                                selectedPeriod == "Last 7 Days",
+                                selectedPeriod == "Last 30 Days"
+                              ],
+                              onPressed: (int index) {
+                                setState(() {
+                                  selectedPeriod = index == 0 ? "Last 7 Days" : "Last 30 Days";
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(5),
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  child: Text("Last 7 days"),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  child: Text("Last 30 days"),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 40),
+                        Center(
+                          child: CaloriesIntakeChart(),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text("Last 30 days"),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-            SizedBox(height: 20),
-            Flexible(
-              child: Center(
-                child: CaloriesIntakeChart(),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -100,62 +121,64 @@ class CaloriesIntakeChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 1),
-      ),
-      child: LineChart(
-        LineChartData(
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 40,
-                getTitlesWidget: (value, meta) {
-                  return Text(value.toInt().toString(), style: TextStyle(fontSize: 12));
-                },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: constraints.maxWidth * 0.35,
+          child: LineChart(
+            LineChartData(
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 40,
+                    getTitlesWidget: (value, meta) {
+                      return Text(value.toInt().toString(), style: TextStyle(fontSize: 12));
+                    },
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 1,
+                    getTitlesWidget: (double value, TitleMeta meta) {
+                      int index = value.toInt();
+                      return SideTitleWidget(
+                        axisSide: meta.axisSide,
+                        child: Text(dates[index]),
+                      );
+                    },
+                  ),
+                ),
+                rightTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: false,
+                  ),
+                ),
+                topTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: false,
+                  ),
+                ),
               ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 1,
-                getTitlesWidget: (double value, TitleMeta meta) {
-                  int index = value.toInt();
-                  return SideTitleWidget(
-                    axisSide: meta.axisSide,
-                    child: Text(dates[index]),
-                  );
-                },
+              borderData: FlBorderData(
+                show: true,
+                border: Border.all(color: Colors.black, width: 1),
               ),
-            ),
-            rightTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: false,
-              ),
-            ),
-            topTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: false,
-              ),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: List.generate(caloriesData.length, (index) => FlSpot(index.toDouble(), caloriesData[index])),
+                  isCurved: true,
+                  color: Colors.blue,
+                  dotData: FlDotData(show: true),
+                  belowBarData: BarAreaData(show: false),
+                ),
+              ],
             ),
           ),
-          borderData: FlBorderData(
-            show: true,
-            border: Border.all(color: Colors.black, width: 1),
-          ),
-          lineBarsData: [
-            LineChartBarData(
-              spots: List.generate(caloriesData.length, (index) => FlSpot(index.toDouble(), caloriesData[index])),
-              isCurved: true,
-              color: Colors.blue,
-              dotData: FlDotData(show: true),
-              belowBarData: BarAreaData(show: false),
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
