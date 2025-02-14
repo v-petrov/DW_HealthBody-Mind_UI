@@ -1,8 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/sign_up_part_two.dart';
+import 'package:flutter_hbm/screens/utils/validators_for_sign_up.dart';
 
-class SignUpPartOne extends StatelessWidget {
+class SignUpPartOne extends StatefulWidget {
   const SignUpPartOne({super.key});
+
+  @override
+  State<SignUpPartOne> createState() => SignUpPartOneState();
+}
+
+class SignUpPartOneState extends State<SignUpPartOne> {
+  final formKey = GlobalKey<FormState>();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
+  String? firstNameError;
+  String? lastNameError;
+  String? emailError;
+  String? passwordError;
+  String? confirmPasswordError;
+
+  void validateFirstName(String value) {
+    setState(() {
+      firstNameError = Validators.validateName(value);
+    });
+  }
+
+  void validateLastName(String value) {
+    setState(() {
+      lastNameError = Validators.validateName(value);
+    });
+  }
+
+  void validateEmail(String value) {
+    setState(() {
+      emailError = Validators.validateEmail(value);
+    });
+  }
+
+  void validatePassword(String value) {
+    setState(() {
+      passwordError = Validators.validatePassword(value);
+    });
+  }
+
+  void validateConfirmPassword(String value) {
+    setState(() {
+      confirmPasswordError = Validators.validateConfirmPassword(value, passwordController.text);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,74 +79,99 @@ class SignUpPartOne extends StatelessWidget {
                 border: Border.all(color: Colors.black, width: 2.0),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 300,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'First name',
-                        border: OutlineInputBorder(),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: firstNameController,
+                        decoration: InputDecoration(
+                          labelText: 'First name',
+                          border: OutlineInputBorder(),
+                          errorText: firstNameError,
+                        ),
+                        onChanged: validateFirstName,
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: 300,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Last name',
-                        border: OutlineInputBorder(),
+                    SizedBox(height: 10),
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: lastNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Last name',
+                          border: OutlineInputBorder(),
+                          errorText: lastNameError
+                        ),
+                        onChanged: validateLastName,
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: 300,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
+                    SizedBox(height: 10),
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                          errorText: emailError
+                        ),
+                        onChanged: validateEmail,
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: 300,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
+                    SizedBox(height: 10),
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(),
+                          errorText: passwordError
+                        ),
+                        onChanged: validatePassword,
+                        obscureText: true,
                       ),
-                      obscureText: true,
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: 300,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Confirm password',
-                        border: OutlineInputBorder(),
+                    SizedBox(height: 10),
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: confirmPasswordController,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm password',
+                          border: OutlineInputBorder(),
+                          errorText: confirmPasswordError
+                        ),
+                        onChanged: validateConfirmPassword,
+                        obscureText: true,
                       ),
-                      obscureText: true,
                     ),
-                  ),
-                  SizedBox(height: 20),
-                  SizedBox(
-                    width: 150,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignUpPartTwo()),
-                        );
-                      },
-                      child: Text('Sign Up'),
+                    SizedBox(height: 20),
+                    SizedBox(
+                      width: 150,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (formKey.currentState!.validate() &&
+                              firstNameError == null &&
+                              lastNameError == null &&
+                              emailError == null &&
+                              passwordError == null &&
+                              confirmPasswordError == null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SignUpPartTwo()),
+                            );
+                          }
+                        },
+                        child: Text('Sign Up'),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
