@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/sign_up_part_two.dart';
-import 'package:flutter_hbm/screens/utils/validators_for_sign_up.dart';
+import 'package:flutter_hbm/screens/utils/validators.dart';
 
 class SignUpPartOne extends StatefulWidget {
   const SignUpPartOne({super.key});
@@ -17,11 +17,7 @@ class SignUpPartOneState extends State<SignUpPartOne> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
-  String? firstNameError;
-  String? lastNameError;
-  String? emailError;
-  String? passwordError;
-  String? confirmPasswordError;
+  String? firstNameError, lastNameError, emailError, passwordError, confirmPasswordError;
 
   void validateFirstName(String value) {
     setState(() {
@@ -155,12 +151,13 @@ class SignUpPartOneState extends State<SignUpPartOne> {
                       width: 150,
                       child: ElevatedButton(
                         onPressed: () {
-                          if (formKey.currentState!.validate() &&
-                              firstNameError == null &&
-                              lastNameError == null &&
-                              emailError == null &&
-                              passwordError == null &&
-                              confirmPasswordError == null) {
+                          validateFirstName(firstNameController.text);
+                          validateLastName(lastNameController.text);
+                          validateEmail(emailController.text);
+                          validatePassword(passwordController.text);
+                          validateConfirmPassword(confirmPasswordController.text);
+                          if (firstNameError == null && lastNameError == null && emailError == null &&
+                              passwordError == null && confirmPasswordError == null) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => SignUpPartTwo()),

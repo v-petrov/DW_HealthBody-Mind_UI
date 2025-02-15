@@ -1,9 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/forgot_password.dart';
 import 'package:flutter_hbm/screens/log_in/sign_up_part_one.dart';
+import 'package:flutter_hbm/screens/main_page.dart';
 
-class LoginForm extends StatelessWidget {
+import '../utils/validators.dart';
+
+class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
+
+  @override
+  State<LoginForm> createState() => LoginFormState();
+}
+class LoginFormState extends State<LoginForm> {
+  final formKey = GlobalKey<FormState>();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  String? emailError, passwordError;
+
+  void validateEmail(String value) {
+    setState(() {
+      emailError = Validators.validateEmail(value);
+    });
+  }
+
+  void validatePassword(String value) {
+    setState(() {
+      passwordError = Validators.validatePassword(value);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,95 +50,113 @@ class LoginForm extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Health Body&Mind',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  Divider(
-                    color: Colors.black,
-                    thickness: 1.5,
-                  ),
-                  SizedBox(height: 20),
-
-                  SizedBox(
-                    width: 300,
-                    child: TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Health Body&Mind',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  SizedBox(height: 20),
 
-                  SizedBox(
-                    width: 300,
-                    child: TextFormField(
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
+                    Divider(
+                      color: Colors.black,
+                      thickness: 1.5,
+                    ),
+                    SizedBox(height: 20),
+
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                          errorText: emailError,
+                        ),
+                        onChanged: validateEmail,
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
+                    SizedBox(height: 20),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
+                    SizedBox(
+                      width: 300,
+                      child: TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(),
+                          errorText: passwordError,
+                        ),
+                        onChanged: validatePassword,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ForgotPassword()),
+                          );
+                        },
+                        child: Text(
+                          'Forgot password',
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+
+                    ElevatedButton(
+                      onPressed: () {
+                        validateEmail(emailController.text);
+                        validatePassword(passwordController.text);
+                        if (emailError == null && passwordError == null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MainPage()),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(150, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text('Log In'),
+                    ),
+                    SizedBox(height: 10),
+
+                    Text('or'),
+                    SizedBox(height: 10),
+
+                    ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ForgotPassword()),
+                          MaterialPageRoute(builder: (context) => SignUpPartOne()),
                         );
                       },
-                      child: Text(
-                        'Forgot password',
-                        style: TextStyle(color: Colors.blue),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(150, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
+                      child: Text('Sign Up'),
                     ),
-                  ),
-                  SizedBox(height: 20),
-
-                  ElevatedButton(
-                    onPressed: null,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(150, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text('Log In'),
-                  ),
-                  SizedBox(height: 10),
-
-                  Text('or'),
-                  SizedBox(height: 10),
-
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SignUpPartOne()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(150, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text('Sign Up'),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
