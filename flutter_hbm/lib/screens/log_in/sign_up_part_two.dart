@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbm/screens/main_page.dart';
 import 'package:flutter_hbm/screens/utils/validators.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/authentication_service.dart';
 import '../utils/formatters.dart';
 
 class SignUpPartTwo extends StatefulWidget {
-  const SignUpPartTwo({super.key});
+  final Map<String, dynamic> userData;
+  const SignUpPartTwo({super.key, required this.userData});
 
   @override
   SignUpPartTwoState createState() => SignUpPartTwoState();
@@ -23,6 +26,46 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
 
   String? goalError, activityLevelError, genderError, weeklyGoalError, birthDateError;
   String? heightError, weightError, goalWeightError, goalWeightWithGoalAndWeightError, weeklyGoalWithGoalError;
+
+  bool isLoading = false;
+  String? errorMessage;
+
+  void registrationAuthentication() async {
+    setState(() => isLoading = true);
+
+    widget.userData.addAll({
+      "goal": goal,
+      "activityLevel": activityLevel,
+      "gender": gender,
+      "dateOfBirth": DateFormatter.formatDate(birthDate!),
+      "height": int.tryParse(heightController.text),
+      "weight": double.tryParse(weightController.text),
+      "goalWeight": double.tryParse(goalWeightController.text),
+      "weeklyGoal": weeklyGoal,
+    });
+
+    try {
+      final response = await AuthenticationService.registerUser(widget.userData);
+
+      if (response.containsKey("message")) {
+        throw Exception(response["message"]);
+      }
+
+      String token = response["token"];
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('authentication_token', token);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MainPage()),
+      );
+    } catch (e) {
+      setState(() => errorMessage = e.toString().split(":").last.trim());
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   void validateHeight(String value) {
     setState(() {
@@ -304,31 +347,26 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                           style: TextStyle(color: Colors.red, fontSize: 12),
                         ),
                       ),
+                    if (errorMessage != null && errorMessage!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          errorMessage!,
+                          style: TextStyle(color: Colors.red, fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     SizedBox(height: 20),
                     Center(
                         child: SizedBox(
                           width: 150,
                           child: ElevatedButton(
                             onPressed: () {
-                              validateGoal("Goal");
-                              validateActivityLevel("Activity level");
-                              validateGender("Gender");
-                              validateHeight(heightController.text);
-                              validateWeight(weightController.text);
-                              validateWeeklyGoal();
-                              validateGoalWeight();
-                              validateBirthDate();
-                              if (goalError == null && activityLevelError == null && genderError == null &&
-                                  weeklyGoalError == null && birthDateError == null && heightError == null &&
-                                  weightError == null && goalWeightError == null) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => MainPage()),
-                                );
-                              }
+                              registrationAuthentication();
                             },
-                            child: Text("Submit"),
+                            child: isLoading
+                                ? CircularProgressIndicator(color: Colors.white)
+                                : Text('Submit'),
                           ),
                         )
                     )

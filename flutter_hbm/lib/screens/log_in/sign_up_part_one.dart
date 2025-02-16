@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/sign_up_part_two.dart';
+import 'package:flutter_hbm/screens/services/authentication_service.dart';
 import 'package:flutter_hbm/screens/utils/validators.dart';
 
 class SignUpPartOne extends StatefulWidget {
@@ -18,6 +19,8 @@ class SignUpPartOneState extends State<SignUpPartOne> {
   final TextEditingController confirmPasswordController = TextEditingController();
 
   String? firstNameError, lastNameError, emailError, passwordError, confirmPasswordError;
+  bool isLoading = false;
+  String? errorMessage;
 
   void validateFirstName(String value) {
     setState(() {
@@ -47,6 +50,44 @@ class SignUpPartOneState extends State<SignUpPartOne> {
     setState(() {
       confirmPasswordError = Validators.validateConfirmPassword(value, passwordController.text);
     });
+  }
+
+  void userDataFirstPart() async {
+    validateFirstName(firstNameController.text);
+    validateLastName(lastNameController.text);
+    validateEmail(emailController.text);
+    validatePassword(passwordController.text);
+    validateConfirmPassword(confirmPasswordController.text);
+
+    if (firstNameError == null && lastNameError == null && emailError == null &&
+        passwordError == null && confirmPasswordError == null) {
+
+      setState(() => isLoading = true);
+      try {
+        final response = await AuthenticationService.checkEmailExists(emailController.text);
+        if (response["exists"] == true) {
+          throw Exception("Invalid credentials or unable to proceed.");
+        }
+        Map<String, dynamic> userData = {
+          "firstName": firstNameController.text,
+          "lastName": lastNameController.text,
+          "email": emailController.text,
+          "password": passwordController.text,
+        };
+
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SignUpPartTwo(userData: userData)),
+        );
+      } catch (e) {
+        setState(() {
+          errorMessage = e.toString().split(":").last.trim();
+        });
+      } finally {
+        setState(() => isLoading = false);
+      }
+    }
   }
 
   @override
@@ -151,22 +192,21 @@ class SignUpPartOneState extends State<SignUpPartOne> {
                       width: 150,
                       child: ElevatedButton(
                         onPressed: () {
-                          validateFirstName(firstNameController.text);
-                          validateLastName(lastNameController.text);
-                          validateEmail(emailController.text);
-                          validatePassword(passwordController.text);
-                          validateConfirmPassword(confirmPasswordController.text);
-                          if (firstNameError == null && lastNameError == null && emailError == null &&
-                              passwordError == null && confirmPasswordError == null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => SignUpPartTwo()),
-                            );
-                          }
+                          userDataFirstPart();
                         },
-                        child: Text('Sign Up'),
+                        child: isLoading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text('Continue'),
                       ),
                     ),
+                    if (errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5.0, left: 8.0),
+                        child: Text(
+                          errorMessage!,
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
                   ],
                 ),
               ),
