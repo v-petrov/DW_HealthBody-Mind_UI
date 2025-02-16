@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/forgot_password.dart';
 import 'package:flutter_hbm/screens/log_in/sign_up_part_one.dart';
 import 'package:flutter_hbm/screens/main_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/authentication_service.dart';
 import '../utils/validators.dart';
 
 class LoginForm extends StatefulWidget {
@@ -17,6 +19,40 @@ class LoginFormState extends State<LoginForm> {
   final TextEditingController passwordController = TextEditingController();
 
   String? emailError, passwordError;
+  bool isLoading = false;
+
+  void loginAuthentication() async {
+    validateEmail(emailController.text);
+    validatePassword(passwordController.text);
+
+    if (emailError == null && passwordError == null) {
+      setState(() => isLoading = true);
+      try {
+        final response = await AuthenticationService.loginUser(emailController.text, passwordController.text);
+
+        if (response.containsKey("message")) {
+          throw Exception(response["message"]);
+        }
+
+        String token = response["token"];
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('authentication_token', token);
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MainPage()),
+        );
+
+      } catch (e) {
+        setState(() {
+          emailError = e.toString().split(":").last.trim();
+        });
+      } finally {
+        setState(() => isLoading = false);
+      }
+    }
+  }
 
   void validateEmail(String value) {
     setState(() {
@@ -117,23 +153,16 @@ class LoginFormState extends State<LoginForm> {
                     SizedBox(height: 20),
 
                     ElevatedButton(
-                      onPressed: () {
-                        validateEmail(emailController.text);
-                        validatePassword(passwordController.text);
-                        if (emailError == null && passwordError == null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MainPage()),
-                          );
-                        }
-                      },
+                      onPressed: isLoading ? null : loginAuthentication,
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(150, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text('Log In'),
+                      child: isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text('Log In'),
                     ),
                     SizedBox(height: 10),
 
