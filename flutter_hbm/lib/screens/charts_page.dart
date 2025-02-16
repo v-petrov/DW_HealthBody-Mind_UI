@@ -145,7 +145,8 @@ class CaloriesIntakeChart extends StatelessWidget {
                     getTitlesWidget: (double value, TitleMeta meta) {
                       int index = value.toInt();
                       return SideTitleWidget(
-                        axisSide: meta.axisSide,
+                        fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
+                        meta: meta,
                         child: Text(dates[index]),
                       );
                     },
