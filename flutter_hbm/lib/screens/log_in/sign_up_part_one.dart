@@ -64,7 +64,7 @@ class SignUpPartOneState extends State<SignUpPartOne> {
 
       setState(() => isLoading = true);
       try {
-        final response = await AuthenticationService.checkEmailExists(emailController.text);
+        final response = await AuthenticationService.emailValidation(emailController.text);
         if (response["exists"] == true) {
           throw Exception("Invalid credentials or unable to proceed.");
         }

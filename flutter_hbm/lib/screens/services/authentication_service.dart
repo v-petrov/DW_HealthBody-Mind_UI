@@ -42,14 +42,14 @@ class AuthenticationService {
         return jsonDecode(response.body);
       } else {
         final errorResponse = jsonDecode(response.body);
-        throw Exception(errorResponse["message"] ?? "Registration failed. Please check your details.");
+        throw Exception(errorResponse["message"] ?? "Registration failed. Please check your credentials.");
       }
     } catch (e) {
       throw Exception(e.toString());
     }
   }
 
-  static Future<Map<String, dynamic>> checkEmailExists(String email) async {
+  static Future<Map<String, dynamic>> emailValidation(String email) async {
     final url = Uri.parse("$baseUrl/emailValidation");
 
     try {
@@ -62,7 +62,7 @@ class AuthenticationService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception("Failed to check email.");
+        throw Exception("Invalid request made.");
       }
     } catch (e) {
       throw Exception(e.toString());
