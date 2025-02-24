@@ -45,7 +45,7 @@ class IntegerTextInputFormatter extends TextInputFormatter {
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     final text = newValue.text;
 
-    final regExp = RegExp(r'^\d{0,' + num.toString() + r'}$');
+    final regExp = RegExp(r'^(0|[1-9]\d{0,' + (num! - 1).toString() + r'})$');
 
     if (regExp.hasMatch(text)) {
       return newValue;

@@ -18,7 +18,7 @@ class Validators {
     if (value == null || value.trim().isEmpty) {
       return "Email is required!";
     }
-    final emailRegExp = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    final emailRegExp = RegExp(r"^(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$");
     if (!emailRegExp.hasMatch(value)) {
       return "Invalid email format!";
     }
@@ -71,7 +71,7 @@ class Validators {
     if (value == null || value.trim().isEmpty) {
       return "Weight is required!";
     }
-    final num? number = num.tryParse(value);
+    final num? number = num.tryParse(value.replaceAll("KG", "").trim());
     if (number == null) {
       return "Weight must be a valid number!";
     }
@@ -85,7 +85,7 @@ class Validators {
     if (value == null || value.trim().isEmpty) {
       return "Goal weight is required!";
     }
-    final num? number = num.tryParse(value);
+    final num? number = num.tryParse(value.replaceAll("KG", "").trim());
     if (number == null) {
       return "Goal weight must be a valid number!";
     }
@@ -97,11 +97,11 @@ class Validators {
 
   static String? validateGoalWeightWithGoalAndWeight(String? weightValue, String? goalWeightValue, String? goal) {
     if (weightValue == null || goalWeightValue == null || goal == null) {
-      return "Goal weight and current weight are required!";
+      return "Goal weight, current weight and goal are required!";
     }
 
-    final num? weight = num.tryParse(weightValue);
-    final num? goalWeight = num.tryParse(goalWeightValue);
+    final num? weight = num.tryParse(weightValue.replaceAll("KG", "").trim());
+    final num? goalWeight = num.tryParse(goalWeightValue.replaceAll("KG", "").trim());
 
     if (weight == null || goalWeight == null) {
       return "Please enter a valid number!";
@@ -123,7 +123,7 @@ class Validators {
 
   static String? validateWeeklyGoalWithGoal(String? goal, String? weeklyGoal) {
     if (goal == null || weeklyGoal == null) {
-      return "Weekly goal is required!";
+      return "Weekly goal and goal is required!";
     }
 
     if ((goal == "LOSE_WEIGHT" && (weeklyGoal == "GAIN_0_5_KG" || weeklyGoal == "GAIN_1_KG" || weeklyGoal == "MAINTAIN")) ||
@@ -132,6 +132,26 @@ class Validators {
       return "Weekly goal must align with your main goal!";
     }
 
+    return null;
+  }
+  static String? validateMacronutrients(String? target, double? quantity) {
+    if (target?.compareTo("carbs") == 0) {
+      if (quantity! < 20) {
+        return "Carbs must be 20g or more";
+      }
+    } else if (target?.compareTo("fats") == 0) {
+      if (quantity! < 20) {
+        return "Fats must be 20g or more!";
+      }
+    } else if (target?.compareTo("protein") == 0) {
+      if (quantity! < 30) {
+        return "Protein must be 30g or more!";
+      }
+    } else {
+      if (quantity! < 1) {
+        return "Water must be 1L or more!";
+      }
+    }
     return null;
   }
 }
