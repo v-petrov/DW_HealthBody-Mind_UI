@@ -1,12 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/services/user_service.dart';
 import 'package:flutter_hbm/widgets/horizontal_scroll.dart';
 import 'package:flutter_hbm/widgets/vertical_scroll.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/widgets_for_main_page.dart';
 import '../widgets/calendar.dart';
 import '../widgets/main_layout.dart';
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() =>  MainPageState();
+}
+
+class MainPageState extends State<MainPage> {
+  int calories = 0, goalCalories = 0,protein = 0, carbs = 0, fats = 0;
+  double water = 0.0, goalWater = 0.0;
+  int proteinProc = 0, carbsProc = 0, fatsProc = 0;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUserCalories();
+  }
+
+  void loadUserCalories() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey("calories")) {
+      setState(() {
+        calories = prefs.getInt("calories") ?? 0;
+        goalCalories = calories;
+        protein = prefs.getInt("protein") ?? 0;
+        carbs = prefs.getInt("carbs") ?? 0;
+        fats = prefs.getInt("fats") ?? 0;
+        water = prefs.getDouble("water") ?? 0.0;
+        goalWater = water * 1000;
+      });
+    } else {
+      try {
+        final response = await UserService.getUserCalories();
+        await prefs.setInt("calories", response["calories"]);
+        await prefs.setInt("protein", response["protein"]);
+        await prefs.setInt("carbs", response["carbs"]);
+        await prefs.setInt("fats", response["fats"]);
+        await prefs.setDouble("water", response["water"]);
+        setState(() {
+          calories = response["calories"];
+          goalCalories = calories;
+          protein = response["protein"];
+          carbs = response["carbs"];
+          fats = response["fats"];
+          water = response["water"];
+          goalWater = water * 1000;
+        });
+        proteinProc = (((protein * 4) / calories) * 100).round();
+        carbsProc = (((carbs * 4) / calories) * 100).round();
+        fatsProc = 100 - proteinProc - carbsProc;
+      } catch (e) {
+        setState(() {
+          errorMessage = e.toString();
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +83,14 @@ class MainPage extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (errorMessage != null)
+                    Center(
+                      child: Text(
+                        errorMessage!,
+                        style: TextStyle(color: Colors.red, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                 Container(
                   padding: EdgeInsets.all(10),
                   width: leftSideWidth,
@@ -39,17 +105,17 @@ class MainPage extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            buildGoalCircle("Calories\nleft"),
+                            buildGoalCircle("$calories"),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 SizedBox(height: 20),
                                 Text("Goal", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                Text("2000", style: TextStyle(fontSize: 14)),
+                                Text("$goalCalories", style: TextStyle(fontSize: 14)),
                                 Text("Food", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                Text("1500", style: TextStyle(fontSize: 14)),
+                                Text("0", style: TextStyle(fontSize: 14)),
                                 Text("Training", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                Text("500", style: TextStyle(fontSize: 14)),
+                                Text("0", style: TextStyle(fontSize: 14)),
                               ],
                             ),
                           ],
@@ -58,13 +124,13 @@ class MainPage extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            buildGoalCircle("Water\nleft"),
+                            buildGoalCircle("$water L"),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 SizedBox(width: 50),
                                 Text("Goal", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                Text("2000", style: TextStyle(fontSize: 14)),
+                                Text("$goalWater ml", style: TextStyle(fontSize: 14)),
                               ],
                             ),
                           ],
@@ -88,9 +154,9 @@ class MainPage extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            buildMacroCircle("Calories\nleft", "Carbs", "Goal: ", "%: "),
-                            buildMacroCircle("Calories\nleft", "Protein", "Goal: ", "%: "),
-                            buildMacroCircle("Calories\nleft", "Fat", "Goal: ", "%: "),
+                            buildMacroCircle("$carbs", "Carbs", "Goal: $carbs g", "$carbsProc%"),
+                            buildMacroCircle("$protein", "Protein", "Goal: $protein g", "$proteinProc%"),
+                            buildMacroCircle("$fats", "Fat", "Goal: $fats g", "$fatsProc%"),
                           ],
                         ),
                       ],
@@ -133,11 +199,4 @@ class MainPage extends StatelessWidget {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: MainPage(),
-  ));
 }

@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/login_form.dart';
+import 'package:flutter_hbm/screens/provider/user_provider.dart';
+import 'package:provider/provider.dart';
 
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
