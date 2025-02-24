@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbm/screens/main_page.dart';
 import 'package:flutter_hbm/screens/utils/validators.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../provider/user_provider.dart';
 import '../services/authentication_service.dart';
 import '../utils/formatters.dart';
 
@@ -53,7 +55,12 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
 
       String token = response["token"];
       final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
       await prefs.setString('authentication_token', token);
+
+      if (!mounted) return;
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      await userProvider.setUserDataAfterRegistration(widget.userData);
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -102,6 +109,10 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
   void validateGoal(String target) {
     setState(() {
       goalError = Validators.validateDropdownMenu(goal, target);
+      if (goalError == null) {
+        goalWeightError = null;
+        weeklyGoalError = null;
+      }
     });
   }
   void validateActivityLevel(String target) {
@@ -168,7 +179,9 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                         onSelected: (value) {
                           setState(() {
                             goal = value!;
+                            validateGoal(value);
                           });
+
                         },
                       ),
                     ),
@@ -198,6 +211,7 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                               onSelected: (value) {
                                 setState(() {
                                   activityLevel = value!;
+                                  validateActivityLevel(value);
                                 });
                               },
                             ),
@@ -232,6 +246,7 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                         onSelected: (value) {
                           setState(() {
                             gender = value!;
+                            validateGender(value);
                           });
                         },
                       ),
@@ -247,16 +262,18 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                     SizedBox(height: 15),
                     GestureDetector(
                       onTap: () async {
+                        final DateTime minAllowedDate = DateTime.now().subtract(Duration(days: 16 * 365));
                         final DateTime? selectedDate = await showDatePicker(
                           context: context,
-                          initialDate: DateTime.now(),
+                          initialDate: minAllowedDate,
                           firstDate: DateTime(1900),
-                          lastDate: DateTime.now(),
+                          lastDate: minAllowedDate,
                         );
                         if (selectedDate != null) {
                           setState(() {
                             birthDate = selectedDate;
                           });
+                          validateBirthDate();
                         }
                       },
                       child: InputDecorator(
@@ -286,7 +303,7 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        HeightTextInputFormatter(),
+                        IntegerTextInputFormatter(3),
                       ],
                       decoration: InputDecoration(
                         labelText: "How tall are you? (cm)",
@@ -334,8 +351,8 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                         onSelected: (value) {
                           setState(() {
                             weeklyGoal = value!;
+                            validateWeeklyGoal();
                           });
-                          validateWeeklyGoal();
                         },
                       ),
                     ),
@@ -358,17 +375,38 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                       ),
                     SizedBox(height: 20),
                     Center(
-                        child: SizedBox(
-                          width: 150,
-                          child: ElevatedButton(
-                            onPressed: () {
+                      child: SizedBox(
+                        width: 150,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              errorMessage = null;
+                              validateGoal("Goal");
+                              validateActivityLevel("Activity level");
+                              validateGender("Gender");
+                              validateWeeklyGoal();
+                              validateBirthDate();
+                              validateHeight(heightController.text);
+                              validateWeight(weightController.text);
+                              validateGoalWeight();
+                            });
+
+                            if (goalError == null &&
+                                activityLevelError == null &&
+                                genderError == null &&
+                                weeklyGoalError == null &&
+                                birthDateError == null &&
+                                heightError == null &&
+                                weightError == null &&
+                                goalWeightError == null) {
                               registrationAuthentication();
-                            },
-                            child: isLoading
-                                ? CircularProgressIndicator(color: Colors.white)
-                                : Text('Submit'),
-                          ),
-                        )
+                            }
+                          },
+                          child: isLoading
+                              ? CircularProgressIndicator(color: Colors.white)
+                              : Text('Submit'),
+                        ),
+                      ),
                     )
                   ],
                 ),

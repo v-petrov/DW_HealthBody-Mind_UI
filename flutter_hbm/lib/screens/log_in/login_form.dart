@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/forgot_password.dart';
 import 'package:flutter_hbm/screens/log_in/sign_up_part_one.dart';
 import 'package:flutter_hbm/screens/main_page.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../provider/user_provider.dart';
 import '../services/authentication_service.dart';
 import '../utils/validators.dart';
 
@@ -36,7 +38,12 @@ class LoginFormState extends State<LoginForm> {
 
         String token = response["token"];
         final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
         await prefs.setString('authentication_token', token);
+
+        if (!mounted) return;
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        await userProvider.loadUserProfile();
 
         if (!mounted) return;
         Navigator.pushReplacement(
