@@ -61,4 +61,76 @@ class UserService {
       throw Exception(e.toString());
     }
   }
+  static Future<Map<String, dynamic>> saveUserCalories(int calories, int carbs, int fats, int protein, double water) async {
+    final url = Uri.parse("$baseUrl/saveUserCalories");
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString("authentication_token");
+
+    if (token == null) {
+      throw Exception("No authentication token found.");
+    }
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json"
+        },
+        body: jsonEncode({
+          "calories" : calories,
+          "protein" : protein,
+          "carbs" : carbs,
+          "fats" : fats,
+          "water" : water
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        final errorResponse = jsonDecode(response.body);
+        throw Exception(errorResponse["message"] ?? "Failed to save user calories.");
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+  static Future<Map<String, dynamic>> saveUserProfile(double weight, double goalWeight, String goal, String weeklyGoal, String activityLevel, int steps, bool stepsFlag) async {
+    final url = Uri.parse("$baseUrl/saveUserProfile");
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString("authentication_token");
+
+    if (token == null) {
+      throw Exception("No authentication token found.");
+    }
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json"
+        },
+        body: jsonEncode({
+          "weight" : weight,
+          "goalWeight" : goalWeight,
+          "goal" : goal,
+          "weeklyGoal" : weeklyGoal,
+          "activityLevel" : activityLevel,
+          "steps" : steps,
+          "stepsFlag" : stepsFlag
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        final errorResponse = jsonDecode(response.body);
+        throw Exception(errorResponse["message"] ?? "Failed to save user calories.");
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }
