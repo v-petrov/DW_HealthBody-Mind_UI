@@ -16,26 +16,23 @@ Widget buildGoalRow(String label, String value) {
   );
 }
 
-Widget buildTextFieldWithLabel(String label, String suffix) {
+Widget buildTextFieldWithLabel(String label, String value) {
   return Padding(
     padding: const EdgeInsets.only(bottom: 10.0),
     child: Row(
       children: [
-        Expanded(
-          flex: 2,
-          child: Text(label, style: TextStyle(fontSize: 14)),
+        SizedBox(
+          width: 120,
+          child: Text(label, style: TextStyle(fontSize: 14), textAlign: TextAlign.right),
         ),
+        SizedBox(width: 10),
         Expanded(
-          flex: 3,
           child: TextField(
+            controller: TextEditingController(text: value),
             readOnly: true,
-            enabled: false,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
-              hintText: "Enter value",
-              suffixText: suffix,
             ),
-            keyboardType: TextInputType.number,
           ),
         ),
       ],
