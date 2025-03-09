@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-Widget buildMealSection(String mealName) {
-  // List<Map<String, String>> foodData;
-
+Widget buildMealSection(String mealSection, Map<String, List<Map<String, String>>> foodIntakes,
+    Function(int?, String?) onSelectFoodIntake, int? selectedFoodIntakeId) {
   return LayoutBuilder(
     builder: (context, constraints) {
       double containerWidth = constraints.maxWidth;
@@ -10,9 +9,13 @@ Widget buildMealSection(String mealName) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            mealName,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              Text(
+                mealSection,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
           Container(
             width: tableWidth,
@@ -38,6 +41,7 @@ Widget buildMealSection(String mealName) {
                         flex: 2,
                         child: Row(
                           children: [
+                            buildHeaderCell("Quantity"),
                             buildHeaderCell("Calories"),
                             buildHeaderCell("Carbs"),
                             buildHeaderCell("Fat"),
@@ -51,39 +55,53 @@ Widget buildMealSection(String mealName) {
                 ),
                 Divider(thickness: 2, height: 0),
 
-                // When there is real data we will use that part!
-                // Expanded(
-                //   child: SingleChildScrollView(
-                //     child: Column(
-                //       children: foodData.map((food) {
-                //         return Row(
-                //           children: [
-                //             Expanded(
-                //               flex: 1,
-                //               child: Padding(
-                //                 padding: EdgeInsets.symmetric(horizontal: 8.0),
-                //                 child: Text(food["Meal"]!),
-                //               ),
-                //             ),
-                //             Container(width: 1, height: 30, color: Colors.black),
-                //             Expanded(
-                //               flex: 2,
-                //               child: Row(
-                //                 children: [
-                //                   buildDataCell(food["Calories"]!),
-                //                   buildDataCell(food["Carbs"]!),
-                //                   buildDataCell(food["Fat"]!),
-                //                   buildDataCell(food["Protein"]!),
-                //                   buildDataCell(food["Sugar"]!, isLast: true),
-                //                 ],
-                //               ),
-                //             ),
-                //           ],
-                //         );
-                //       }).toList(),
-                //     ),
-                //   ),
-                // ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: foodIntakes[mealSection]!.map((food) {
+                        bool isSelected = selectedFoodIntakeId == int.parse(food["id"]!);
+
+                        return GestureDetector(
+                          onTap: () {
+                            if (selectedFoodIntakeId == int.parse(food["id"]!)) {
+                              onSelectFoodIntake(null, null);
+                            } else {
+                              onSelectFoodIntake(int.parse(food["id"]!), mealSection);
+                            }
+                          },
+                          child: Container(
+                            color: isSelected ? Colors.blue[100] : Colors.transparent,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                    child: Text(food["name"]!),
+                                  ),
+                                ),
+                                Container(width: 1, height: 30, color: Colors.black),
+                                Expanded(
+                                  flex: 2,
+                                  child: Row(
+                                    children: [
+                                      buildDataCell("${food["quantity"]}g"),
+                                      buildDataCell("${food["calories"]}cal"),
+                                      buildDataCell("${food["carbs"]}g"),
+                                      buildDataCell("${food["fats"]}g"),
+                                      buildDataCell("${food["protein"]}g"),
+                                      buildDataCell("${food["sugar"]}g", isLast: true),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
