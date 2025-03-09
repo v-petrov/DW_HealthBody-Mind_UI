@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/provider/user_provider.dart';
 import 'package:flutter_hbm/screens/services/user_service.dart';
 import 'package:flutter_hbm/widgets/horizontal_scroll.dart';
 import 'package:flutter_hbm/widgets/vertical_scroll.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/widgets_for_main_page.dart';
 import '../widgets/calendar.dart';
@@ -15,29 +17,50 @@ class MainPage extends StatefulWidget {
 }
 
 class MainPageState extends State<MainPage> {
-  int calories = 0, goalCalories = 0,protein = 0, carbs = 0, fats = 0;
-  double water = 0.0, goalWater = 0.0;
+  int goalCalories = 0;
+  double goalWater = 0.0;
   int proteinProc = 0, carbsProc = 0, fatsProc = 0;
   String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    loadUserCalories();
+    Future.microtask(() async {
+      await loadFoodIntakesIfNot();
+      await loadUserCalories();
+    });
   }
 
-  void loadUserCalories() async {
+  Future<void> loadFoodIntakesIfNot() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    await userProvider.loadUserProfile();
+    final prefs = await SharedPreferences.getInstance();
+    bool isFoodIntakesLoaded = prefs.getBool("isFoodIntakeLoaded") ?? false;
+    if (!isFoodIntakesLoaded) {
+      await userProvider.loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
+      await prefs.setBool("isFoodIntakeLoaded", true);
+    }
+  }
+
+  Future<void> loadUserCalories() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey("calories")) {
+      userProvider.calories = prefs.getInt("calories") ?? 0;
+      userProvider.protein = prefs.getInt("protein") ?? 0;
+      userProvider.carbs = prefs.getInt("carbs") ?? 0;
+      userProvider.fats = prefs.getInt("fats") ?? 0;
+      userProvider.water = prefs.getDouble("water") ?? 0.0;
       setState(() {
-        calories = prefs.getInt("calories") ?? 0;
-        goalCalories = calories;
-        protein = prefs.getInt("protein") ?? 0;
-        carbs = prefs.getInt("carbs") ?? 0;
-        fats = prefs.getInt("fats") ?? 0;
-        water = prefs.getDouble("water") ?? 0.0;
-        goalWater = water * 1000;
+        goalCalories = userProvider.calories;
+        goalWater = userProvider.water * 1000;
       });
+      if (prefs.containsKey("dailyCalories")) {
+        userProvider.dailyCalories = prefs.getInt("dailyCalories") ?? 0;
+        userProvider.dailyCarbs = prefs.getInt("dailyCarbs") ?? 0;
+        userProvider.dailyProtein = prefs.getInt("dailyProtein") ?? 0;
+        userProvider.dailyFats = prefs.getInt("dailyFats") ?? 0;
+      }
     } else {
       try {
         final response = await UserService.getUserCalories();
@@ -46,17 +69,17 @@ class MainPageState extends State<MainPage> {
         await prefs.setInt("carbs", response["carbs"]);
         await prefs.setInt("fats", response["fats"]);
         await prefs.setDouble("water", response["water"]);
+        userProvider.calories = response["calories"];
+        userProvider.protein = response["protein"];
+        userProvider.carbs = response["carbs"];
+        userProvider.fats = response["fats"];
+        userProvider.water = response["water"];
         setState(() {
-          calories = response["calories"];
-          goalCalories = calories;
-          protein = response["protein"];
-          carbs = response["carbs"];
-          fats = response["fats"];
-          water = response["water"];
-          goalWater = water * 1000;
+          goalCalories = userProvider.calories;
+          goalWater = userProvider.water * 1000;
         });
-        proteinProc = (((protein * 4) / calories) * 100).round();
-        carbsProc = (((carbs * 4) / calories) * 100).round();
+        proteinProc = (((userProvider.protein * 4) / userProvider.calories) * 100).round();
+        carbsProc = (((userProvider.carbs * 4) / userProvider.calories) * 100).round();
         fatsProc = 100 - proteinProc - carbsProc;
       } catch (e) {
         setState(() {
@@ -64,10 +87,12 @@ class MainPageState extends State<MainPage> {
         });
       }
     }
+    await userProvider.getTotalCalories();
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: true);
     return AppLayout(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -105,7 +130,7 @@ class MainPageState extends State<MainPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            buildGoalCircle("$calories"),
+                            buildGoalCircle("${userProvider.calories - userProvider.dailyCalories}"),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -113,7 +138,7 @@ class MainPageState extends State<MainPage> {
                                 Text("Goal", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                                 Text("$goalCalories", style: TextStyle(fontSize: 14)),
                                 Text("Food", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                Text("0", style: TextStyle(fontSize: 14)),
+                                Text("${userProvider.dailyCalories}", style: TextStyle(fontSize: 14)),
                                 Text("Training", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                                 Text("0", style: TextStyle(fontSize: 14)),
                               ],
@@ -124,7 +149,7 @@ class MainPageState extends State<MainPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            buildGoalCircle("$water L"),
+                            buildGoalCircle("${userProvider.water} L"),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -154,9 +179,9 @@ class MainPageState extends State<MainPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            buildMacroCircle("$carbs", "Carbs", "Goal: $carbs g", "$carbsProc%"),
-                            buildMacroCircle("$protein", "Protein", "Goal: $protein g", "$proteinProc%"),
-                            buildMacroCircle("$fats", "Fat", "Goal: $fats g", "$fatsProc%"),
+                            buildMacroCircle("${userProvider.carbs - userProvider.dailyCarbs}", "Carbs", "Goal: ${userProvider.carbs} g", "$carbsProc%"),
+                            buildMacroCircle("${userProvider.protein - userProvider.dailyProtein}", "Protein", "Goal: ${userProvider.protein} g", "$proteinProc%"),
+                            buildMacroCircle("${userProvider.fats - userProvider.dailyFats}", "Fat", "Goal: ${userProvider.fats} g", "$fatsProc%"),
                           ],
                         ),
                       ],
