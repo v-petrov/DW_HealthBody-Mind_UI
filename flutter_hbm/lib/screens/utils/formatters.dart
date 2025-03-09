@@ -1,34 +1,15 @@
 import 'package:flutter/services.dart';
 
-class WaterTextInputFormatter extends TextInputFormatter {
-  final int decimalPlaces;
-
-  WaterTextInputFormatter({this.decimalPlaces = 1});
-
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    final text = newValue.text;
-
-    final regExp = RegExp('^\\d{0,2}(\\.\\d{0,$decimalPlaces})?\$');
-
-    if (regExp.hasMatch(text)) {
-      return newValue;
-    } else {
-      return oldValue;
-    }
-  }
-}
-
 class DecimalTextInputFormatter extends TextInputFormatter {
-  final int decimalPlaces;
-
-  DecimalTextInputFormatter({this.decimalPlaces = 1});
+  int? decimalPlaces;
+  int? integerPart;
+  DecimalTextInputFormatter(int this.integerPart, int this.decimalPlaces);
 
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     final text = newValue.text;
 
-    final regExp = RegExp('^\\d{0,3}(\\.\\d{0,$decimalPlaces})?\$');
+    final regExp = RegExp(r'^[1-9]\d{0,' + integerPart.toString() + r'}(\.\d{0,' + decimalPlaces.toString() + r'})?$');
 
     if (regExp.hasMatch(text)) {
       return newValue;
