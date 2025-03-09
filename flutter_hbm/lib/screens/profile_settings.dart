@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hbm/screens/log_in/login_form.dart';
 import 'package:flutter_hbm/screens/provider/user_provider.dart';
 import 'package:flutter_hbm/screens/services/user_service.dart';
 import 'package:flutter_hbm/screens/utils/formatters.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_hbm/screens/utils/validators.dart';
 import 'package:flutter_hbm/widgets/horizontal_scroll.dart';
 import 'package:flutter_hbm/widgets/vertical_scroll.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/main_layout.dart';
 import '../widgets/profile_picture.dart';
 import '../widgets/widgets_for_profile_page.dart';
@@ -44,7 +46,6 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   String? carbsError, fatsError, proteinError, waterError, errorMessage;
   String? weightError, goalWeightError, goalError, weeklyGoalError;
-  String? goal, weeklyGoal;
   String? newGoal, newActivityLevel, newWeeklyGoal;
   int carbsProc = 0, fatsProc = 0, proteinProc = 0 ;
   bool waterFlag = false, caloriesFlag = false, stepsFlag = false, weightFlag = false;
@@ -152,12 +153,16 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   @override
   void initState() {
     super.initState();
+    Future.microtask(() async {
+      await loadData();
+    });
+  }
+
+  Future<void> loadData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    userProvider.loadUserProfile();
-    goal = userProvider.goal;
-    weeklyGoal = userProvider.weeklyGoal;
-    newGoal = goal;
-    newWeeklyGoal = weeklyGoal;
+    await userProvider.loadUserProfile();
+    newGoal = userProvider.goal;
+    newWeeklyGoal = userProvider.weeklyGoal;
     newActivityLevel = userProvider.activityLevel;
     weightController = TextEditingController(text: "${userProvider.weight}KG");
     goalWeightController = TextEditingController(text: "${userProvider.goalWeight}KG");
@@ -169,7 +174,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     calculatePercentage(userProvider.calories, userProvider.carbs, userProvider.fats, userProvider.protein);
   }
 
-  void saveUserDataCalories(int carbs, int fats, int protein, double water) async {
+  Future<void> saveUserDataCalories(int carbs, int fats, int protein, double water) async {
     if (!mounted) return;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     int calories = userProvider.calories;
@@ -186,14 +191,14 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
       }
 
       if (!mounted) return;
-      userProvider.updateUserCalories(calories, carbs, protein, fats, water);
+      await userProvider.updateUserCalories(calories, carbs, protein, fats, water);
 
     } catch (e) {
       setState(() => errorMessage = e.toString().split(":").last.trim());
     }
   }
 
-  void saveUserProfile(double weight, double goalWeight, String goal, String weeklyGoal, String activityLevel, int steps) async {
+  Future<void> saveUserProfile(double weight, double goalWeight, String goal, String weeklyGoal, String activityLevel, int steps) async {
     bool combinedFlag = true;
     if (stepsFlag) {
       if (weightFlag) {
@@ -213,9 +218,9 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
       if (!mounted) return;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      userProvider.updateUserProfile(weight, goalWeight, goal, weeklyGoal, activityLevel, steps);
+      await userProvider.updateUserProfile(weight, goalWeight, goal, weeklyGoal, activityLevel, steps);
       if(combinedFlag) {
-        userProvider.updateUserCalories(response["calories"], response["carbs"], response["protein"], response["fats"], response["water"]);
+        await userProvider.updateUserCalories(response["calories"], response["carbs"], response["protein"], response["fats"], response["water"]);
         carbsController.text = response["carbs"].toString();
         proteinController.text = response["protein"].toString();
         fatsController.text = response["fats"].toString();
@@ -284,6 +289,25 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                               child: TextButton(
                                 onPressed: () {},
                                 child: Text("Change email"),
+                              ),
+                            ),
+                            Center(
+                              child: TextButton(
+                                onPressed: () async {
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await prefs.clear();
+
+                                  if (!context.mounted) return;
+                                  final userProvider = Provider.of<UserProvider>(context, listen: false);
+                                  await userProvider.clearUserData();
+
+                                  if (!context.mounted) return;
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => LoginForm()),
+                                  );
+                                },
+                                child: Text("Log out"),
                               ),
                             ),
                           ],
@@ -468,7 +492,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                           child: TextField(
                                             controller: waterController,
                                             keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                            inputFormatters: [WaterTextInputFormatter(decimalPlaces: 1)],
+                                            inputFormatters: [DecimalTextInputFormatter(1, 1)],
                                             textAlign: TextAlign.right,
                                             decoration: InputDecoration(
                                               border: OutlineInputBorder(),
@@ -554,7 +578,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                             child: TextFormField(
                                               controller: weightController,
                                               keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                              inputFormatters: [DecimalTextInputFormatter(decimalPlaces: 1)],
+                                              inputFormatters: [DecimalTextInputFormatter(3, 1)],
                                               readOnly: !isEditingWG,
                                               decoration: InputDecoration(
                                                 border: OutlineInputBorder(),
@@ -647,7 +671,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                             child: TextField(
                                               controller: goalWeightController,
                                               keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                              inputFormatters: [DecimalTextInputFormatter(decimalPlaces: 1)],
+                                              inputFormatters: [DecimalTextInputFormatter(3, 1)],
                                               readOnly: !isEditingWG,
                                               decoration: InputDecoration(
                                                 border: OutlineInputBorder(),
