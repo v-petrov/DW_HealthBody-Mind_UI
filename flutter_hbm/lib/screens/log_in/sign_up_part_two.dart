@@ -316,7 +316,7 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                     TextFormField(
                       controller: weightController,
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [DecimalTextInputFormatter(decimalPlaces: 1)],
+                      inputFormatters: [DecimalTextInputFormatter(3, 1)],
                       decoration: InputDecoration(
                         labelText: "How much do you weigh? (kg)",
                         border: OutlineInputBorder(),
@@ -328,7 +328,7 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
                     TextFormField(
                       controller: goalWeightController,
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [DecimalTextInputFormatter(decimalPlaces: 1)],
+                      inputFormatters: [DecimalTextInputFormatter(3, 1)],
                       decoration: InputDecoration(
                         labelText: "What’s your goal weight? (kg)",
                         border: OutlineInputBorder(),
