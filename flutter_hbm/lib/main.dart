@@ -1,10 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/login_form.dart';
+import 'package:flutter_hbm/screens/main_page.dart';
 import 'package:flutter_hbm/screens/provider/user_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MultiProvider(
       providers: [
@@ -15,8 +19,63 @@ void main() {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  MyAppState createState() => MyAppState();
+}
+
+class MyAppState extends State<MyApp> {
+  bool isLoading = true;
+  Widget initialScreen = LoginForm();
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      await checkUserAuthentication();
+    });
+  }
+
+  Future<void> checkUserAuthentication() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('authentication_token');
+
+    if (token != null && token.isNotEmpty) {
+      bool isValid = await validateToken(token);
+      if (isValid) {
+        setState(() {
+          initialScreen = MainPage();
+        });
+      }
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<bool> validateToken(String token) async {
+    try {
+      List<String> tokenParts = token.split('.');
+      if (tokenParts.length != 3) {
+        return false;
+      }
+
+      String payload = tokenParts[1];
+      String normalizedPayload = base64.normalize(payload);
+      String decodedPayload = utf8.decode(base64.decode(normalizedPayload));
+      Map<String, dynamic> payloadMap = json.decode(decodedPayload);
+
+      int expInSeconds = payloadMap['exp'];
+      int currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+      return currentTimeInSeconds < expInSeconds;
+    } catch (e) {
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +85,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: LoginForm(),
+      home: isLoading ? const Scaffold(body: Center(child: CircularProgressIndicator())) : initialScreen,
     );
   }
 }
