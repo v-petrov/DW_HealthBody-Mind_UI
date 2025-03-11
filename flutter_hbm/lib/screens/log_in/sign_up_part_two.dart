@@ -61,6 +61,7 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
       if (!mounted) return;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await userProvider.setUserDataAfterRegistration(widget.userData);
+      await userProvider.loadUserProfile(true);
 
       if (!mounted) return;
       Navigator.pushReplacement(

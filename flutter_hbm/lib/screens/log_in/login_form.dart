@@ -50,7 +50,9 @@ class LoginFormState extends State<LoginForm> {
         }
         await prefs.setString('authentication_token', token);
 
-        await userProvider.loadUserProfile();
+        await userProvider.loadUserProfile(false);
+        await userProvider.loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
+        await userProvider.loadExerciseData(DateTime.now().toIso8601String().split("T")[0]);
 
         if (!mounted) return;
         Navigator.pushReplacement(
