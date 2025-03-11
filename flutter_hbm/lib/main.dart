@@ -39,12 +39,16 @@ class MyAppState extends State<MyApp> {
   }
 
   Future<void> checkUserAuthentication() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('authentication_token');
 
     if (token != null && token.isNotEmpty) {
       bool isValid = await validateToken(token);
       if (isValid) {
+        await userProvider.loadUserProfile(false);
+        await userProvider.loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
+        await userProvider.loadExerciseData(DateTime.now().toIso8601String().split("T")[0]);
         setState(() {
           initialScreen = MainPage();
         });
