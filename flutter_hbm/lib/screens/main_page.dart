@@ -26,20 +26,8 @@ class MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     Future.microtask(() async {
-      await loadFoodIntakesIfNot();
       await loadUserCalories();
     });
-  }
-
-  Future<void> loadFoodIntakesIfNot() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    await userProvider.loadUserProfile();
-    final prefs = await SharedPreferences.getInstance();
-    bool isFoodIntakesLoaded = prefs.getBool("isFoodIntakeLoaded") ?? false;
-    if (!isFoodIntakesLoaded) {
-      await userProvider.loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
-      await prefs.setBool("isFoodIntakeLoaded", true);
-    }
   }
 
   Future<void> loadUserCalories() async {
@@ -78,16 +66,20 @@ class MainPageState extends State<MainPage> {
           goalCalories = userProvider.calories;
           goalWater = userProvider.water * 1000;
         });
-        proteinProc = (((userProvider.protein * 4) / userProvider.calories) * 100).round();
-        carbsProc = (((userProvider.carbs * 4) / userProvider.calories) * 100).round();
-        fatsProc = 100 - proteinProc - carbsProc;
       } catch (e) {
         setState(() {
           errorMessage = e.toString();
         });
       }
     }
+    calculatePercentage(userProvider.calories, userProvider.carbs, userProvider.fats, userProvider.protein);
     await userProvider.getTotalCalories();
+  }
+
+  void calculatePercentage(int calories, int carbs, int fats, int protein) {
+    proteinProc = (((protein * 4) / calories) * 100).round();
+    carbsProc = (((carbs * 4) / calories) * 100).round();
+    fatsProc = 100 - proteinProc - carbsProc;
   }
 
   @override
@@ -130,17 +122,17 @@ class MainPageState extends State<MainPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            buildGoalCircle("${userProvider.calories - userProvider.dailyCalories}"),
+                            buildGoalCircle("${userProvider.calories - userProvider.dailyCalories} cal"),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 SizedBox(height: 20),
                                 Text("Goal", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                Text("$goalCalories", style: TextStyle(fontSize: 14)),
+                                Text("$goalCalories cal", style: TextStyle(fontSize: 14)),
                                 Text("Food", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                Text("${userProvider.dailyCalories}", style: TextStyle(fontSize: 14)),
+                                Text("${userProvider.dailyCalories} cal", style: TextStyle(fontSize: 14)),
                                 Text("Training", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                Text("0", style: TextStyle(fontSize: 14)),
+                                Text("${userProvider.caloriesBurnedL + userProvider.caloriesBurnedCDR} cal", style: TextStyle(fontSize: 14)),
                               ],
                             ),
                           ],
@@ -179,9 +171,9 @@ class MainPageState extends State<MainPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            buildMacroCircle("${userProvider.carbs - userProvider.dailyCarbs}", "Carbs", "Goal: ${userProvider.carbs} g", "$carbsProc%"),
-                            buildMacroCircle("${userProvider.protein - userProvider.dailyProtein}", "Protein", "Goal: ${userProvider.protein} g", "$proteinProc%"),
-                            buildMacroCircle("${userProvider.fats - userProvider.dailyFats}", "Fat", "Goal: ${userProvider.fats} g", "$fatsProc%"),
+                            buildMacroCircle("${userProvider.carbs - userProvider.dailyCarbs} g", "Carbs", "Goal: ${userProvider.carbs} g", "$carbsProc%"),
+                            buildMacroCircle("${userProvider.protein - userProvider.dailyProtein} g", "Protein", "Goal: ${userProvider.protein} g", "$proteinProc%"),
+                            buildMacroCircle("${userProvider.fats - userProvider.dailyFats} g", "Fat", "Goal: ${userProvider.fats} g", "$fatsProc%"),
                           ],
                         ),
                       ],

@@ -40,7 +40,9 @@ class FoodPageState extends State<FoodPage> {
   @override
   void initState() {
     super.initState();
-    loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
+    Future.microtask(() async {
+      await loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
+    });
   }
 
   void setFoodIntake(int? foodIntakeId, String? mealSection) {
@@ -474,7 +476,7 @@ class FoodPageState extends State<FoodPage> {
                                 SizedBox(height: 15),
                                 Center(
                                   child: ElevatedButton(
-                                    onPressed: () {
+                                    onPressed: () async {
                                       if (selectedFood == null && foodChanged == null) {
                                         setState(() {
                                           errorMessage = "Please select a food first";
@@ -483,10 +485,10 @@ class FoodPageState extends State<FoodPage> {
                                       }
                                       if (selectedFood == null && foodChanged != null) {
                                         if (isEditing) {
-                                          updateFoodIntake();
+                                          await updateFoodIntake();
                                         }
                                       } else {
-                                        saveFoodIntake();
+                                        await saveFoodIntake();
                                       }
                                     },
                                     child: Text(isEditing ? "Save Food" : "Add Food"),

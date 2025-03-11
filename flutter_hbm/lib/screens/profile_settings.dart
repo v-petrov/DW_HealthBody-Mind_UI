@@ -50,6 +50,14 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   int carbsProc = 0, fatsProc = 0, proteinProc = 0 ;
   bool waterFlag = false, caloriesFlag = false, stepsFlag = false, weightFlag = false;
 
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      await loadData();
+    });
+  }
+
   void caloriesEditMode() {
     previousCarbs = carbsController.text;
     previousFats = fatsController.text;
@@ -150,17 +158,9 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     return carbs * 4 + protein * 4 + fats * 9;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() async {
-      await loadData();
-    });
-  }
-
   Future<void> loadData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    await userProvider.loadUserProfile();
+    await userProvider.loadUserProfile(false);
     newGoal = userProvider.goal;
     newWeeklyGoal = userProvider.weeklyGoal;
     newActivityLevel = userProvider.activityLevel;
@@ -235,9 +235,6 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context, listen: true);
 
-    if (!userProvider.isDataLoaded) {
-      return Center(child: CircularProgressIndicator());
-    }
     return AppLayout(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -751,28 +748,27 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                     SizedBox(height: 20),
                                     Center(
                                       child: ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            if (isEditingWG) {
-                                              validateGoal("Goal");
-                                              validateWeight(weightController.text);
-                                              validateWeeklyGoal();
-                                              validateGoalWeight();
+                                        onPressed: () async {
+                                          if (isEditingWG) {
+                                            validateGoal("Goal");
+                                            validateWeight(weightController.text);
+                                            validateWeeklyGoal();
+                                            validateGoalWeight();
 
-                                              if (goalError != null || weeklyGoalError != null ||
-                                                  weightError != null || goalWeightError != null) {
-                                                return;
-                                              }
-                                              weightFlag = isWeightDataChanged();
-                                              if (weightFlag || stepsFlag) {
-                                                saveUserProfile(double.tryParse(weightController.text.replaceAll("KG", "").trim())!,
-                                                    double.tryParse(goalWeightController.text.replaceAll("KG", "").trim())!,
-                                                    newGoal!, newWeeklyGoal!, newActivityLevel!, int.tryParse(stepsController.text)!);
-                                              }
-                                            } else {
-                                              weightEditMode();
+                                            if (goalError != null || weeklyGoalError != null ||
+                                                weightError != null || goalWeightError != null) {
+                                              return;
                                             }
-
+                                            weightFlag = isWeightDataChanged();
+                                            if (weightFlag || stepsFlag) {
+                                             await saveUserProfile(double.tryParse(weightController.text.replaceAll("KG", "").trim())!,
+                                                  double.tryParse(goalWeightController.text.replaceAll("KG", "").trim())!,
+                                                  newGoal!, newWeeklyGoal!, newActivityLevel!, int.tryParse(stepsController.text)!);
+                                            }
+                                          } else {
+                                            weightEditMode();
+                                          }
+                                          setState(() {
                                             isEditingWG = !isEditingWG;
                                           });
                                         },
