@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/services/exercise_service.dart';
 import 'package:flutter_hbm/screens/services/user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,9 +31,12 @@ class UserProvider with ChangeNotifier {
   int protein = 0;
   int carbs = 0;
   int fats = 0;
+  int caloriesBurnedL = 0;
+  int caloriesBurnedCDR = 0;
+  int hoursCDR = 0;
+  int minutesCDR = 0;
   double water = 0.0;
   String imageUrl = "";
-  bool isDataLoaded = false;
   Map<String, List<Map<String, String>>> foodIntakes = {
     "Breakfast": [],
     "Lunch": [],
@@ -147,6 +151,34 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadExerciseData(String date) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey("caloriesBurnedL") || prefs.containsKey("caloriesBurnedCDR")) {
+      caloriesBurnedL = prefs.getInt("caloriesBurnedL") ?? 0;
+      caloriesBurnedCDR = prefs.getInt("caloriesBurnedCDR") ?? 0;
+      hoursCDR = prefs.getInt("hoursCDR") ?? 0;
+      minutesCDR = prefs.getInt("minutesCDR") ?? 0;
+      dailySteps = prefs.getInt("dailySteps") ?? 0;
+    } else {
+      try {
+       final exerciseData = await ExerciseService.getExerciseDataByDate(date);
+       caloriesBurnedL = exerciseData["caloriesBurnedL"];
+       caloriesBurnedCDR = exerciseData["caloriesBurnedC"];
+       hoursCDR = exerciseData["hoursC"];
+       minutesCDR = exerciseData["minutesC"];
+       dailySteps = exerciseData["dailySteps"];
+       await prefs.setInt("caloriesBurnedL", caloriesBurnedL);
+       await prefs.setInt("caloriesBurnedCDR", caloriesBurnedCDR);
+       await prefs.setInt("hoursCDR", hoursCDR);
+       await prefs.setInt("minutesCDR", minutesCDR);
+       await prefs.setInt("dailySteps", dailySteps);
+      } catch (e) {
+        throw Exception(e.toString());
+      }
+    }
+    notifyListeners();
+  }
+
   Future<Map<String, List<Map<String, String>>>> loadFoodIntakes(String date) async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey("foodIntakes")) {
@@ -205,9 +237,9 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<void> loadUserProfile() async {
+  Future<void> loadUserProfile(bool isFromRegistration) async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.containsKey("firstName")) {
+    if (prefs.containsKey("firstName") && !isFromRegistration) {
       firstName = prefs.getString("firstName")!;
       lastName = prefs.getString("lastName")!;
       gender = prefs.getString("gender")!;
@@ -244,7 +276,6 @@ class UserProvider with ChangeNotifier {
         fats = response["fats"]!;
         water = response["water"]!;
 
-        final prefs = await SharedPreferences.getInstance();
         await prefs.setString("firstName", firstName);
         await prefs.setString("lastName", lastName);
         await prefs.setString("gender", gender);
@@ -264,7 +295,6 @@ class UserProvider with ChangeNotifier {
       } catch(e) {
         throw Exception(e.toString());
       }}
-    isDataLoaded = true;
     notifyListeners();
   }
 
@@ -350,6 +380,34 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateCaloriesBurned(int caloriesBurned, bool isLifting, {int hoursC = 0, int minutesC = 0, int steps = 0}) async {
+    if (isLifting) {
+      final prefs = await SharedPreferences.getInstance();
+      int currentCaloriesBurnedL = prefs.getInt("caloriesBurnedL") ?? 0;
+      await prefs.setInt("caloriesBurnedL", currentCaloriesBurnedL + caloriesBurned);
+      caloriesBurnedL = currentCaloriesBurnedL + caloriesBurned;
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      int currentCaloriesBurnedCDR = prefs.getInt("caloriesBurnedCDR") ?? 0;
+      int currentHoursCDR = prefs.getInt("hoursCDR") ?? 0;
+      int currentMinutesCDR = prefs.getInt("minutesCDR") ?? 0;
+      int currentDailySteps = prefs.getInt("dailySteps") ?? 0;
+      if (currentMinutesCDR + minutesC >= 60) {
+        currentHoursCDR += ((currentMinutesCDR + minutesC) / 60).toInt();
+        currentMinutesCDR -= 60;
+      }
+      await prefs.setInt("caloriesBurnedCDR", currentCaloriesBurnedCDR + caloriesBurned);
+      await prefs.setInt("hoursCDR", currentHoursCDR + hoursC);
+      await prefs.setInt("minutesCDR", currentMinutesCDR + minutesC);
+      await prefs.setInt("dailySteps", currentDailySteps + steps);
+      caloriesBurnedCDR = currentCaloriesBurnedCDR + caloriesBurned;
+      hoursCDR = currentHoursCDR + hoursC;
+      minutesCDR = currentMinutesCDR + minutesC;
+      dailySteps = currentDailySteps + steps;
+    }
+    notifyListeners();
+  }
+
   Future<void> clearUserData() async {
     firstName = "";
     lastName = "";
@@ -375,7 +433,6 @@ class UserProvider with ChangeNotifier {
     fats = 0;
     water = 0.0;
     imageUrl = "";
-    isDataLoaded = false;
     foodIntakes.clear();
     notifyListeners();
   }
