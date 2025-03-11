@@ -36,6 +36,34 @@ class IntegerTextInputFormatter extends TextInputFormatter {
   }
 }
 
+class HoursTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text;
+    final regExp = RegExp(r'^$|^(0|[1-9]|1[0-9]|2[0-3])$');
+
+    if (regExp.hasMatch(text)) {
+      return newValue;
+    } else {
+      return oldValue;
+    }
+  }
+}
+
+class MinutesTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text;
+    final regExp = RegExp(r'^$|^(0|[1-9]|[1-5][0-9])$');
+
+    if (regExp.hasMatch(text)) {
+      return newValue;
+    } else {
+      return oldValue;
+    }
+  }
+}
+
 class DateFormatter {
   static String formatDate(DateTime date) {
     return "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
