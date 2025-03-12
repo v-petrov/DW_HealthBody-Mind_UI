@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/provider/date_provider.dart';
 import 'package:flutter_hbm/screens/provider/user_provider.dart';
-import 'package:flutter_hbm/screens/services/user_service.dart';
 import 'package:flutter_hbm/widgets/horizontal_scroll.dart';
 import 'package:flutter_hbm/widgets/vertical_scroll.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/widgets_for_main_page.dart';
 import '../widgets/calendar.dart';
 import '../widgets/main_layout.dart';
@@ -25,55 +24,39 @@ class MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      await loadUserCalories();
+    dateListening();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final dateProvider = Provider.of<DateProvider>(context, listen: false);
+      dateProvider.updateDate(context, DateTime.now(), "main");
     });
   }
 
-  Future<void> loadUserCalories() async {
+  void dateListening() {
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
+    dateProvider.addListener(() {
+      if (dateProvider.currentPage! == "main") {
+        if (!mounted) return;
+        Future.microtask(() async {
+          await loadUserCalories(dateProvider.selectedDate.toIso8601String().split("T")[0]);
+        });
+      }
+    });
+  }
+
+  Future<void> loadUserCalories(String date) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.containsKey("calories")) {
-      userProvider.calories = prefs.getInt("calories") ?? 0;
-      userProvider.protein = prefs.getInt("protein") ?? 0;
-      userProvider.carbs = prefs.getInt("carbs") ?? 0;
-      userProvider.fats = prefs.getInt("fats") ?? 0;
-      userProvider.water = prefs.getDouble("water") ?? 0.0;
+    try {
+      await userProvider.loadUserCalories(date);
       setState(() {
         goalCalories = userProvider.calories;
         goalWater = userProvider.water * 1000;
       });
-      if (prefs.containsKey("dailyCalories")) {
-        userProvider.dailyCalories = prefs.getInt("dailyCalories") ?? 0;
-        userProvider.dailyCarbs = prefs.getInt("dailyCarbs") ?? 0;
-        userProvider.dailyProtein = prefs.getInt("dailyProtein") ?? 0;
-        userProvider.dailyFats = prefs.getInt("dailyFats") ?? 0;
-      }
-    } else {
-      try {
-        final response = await UserService.getUserCalories();
-        await prefs.setInt("calories", response["calories"]);
-        await prefs.setInt("protein", response["protein"]);
-        await prefs.setInt("carbs", response["carbs"]);
-        await prefs.setInt("fats", response["fats"]);
-        await prefs.setDouble("water", response["water"]);
-        userProvider.calories = response["calories"];
-        userProvider.protein = response["protein"];
-        userProvider.carbs = response["carbs"];
-        userProvider.fats = response["fats"];
-        userProvider.water = response["water"];
-        setState(() {
-          goalCalories = userProvider.calories;
-          goalWater = userProvider.water * 1000;
-        });
-      } catch (e) {
-        setState(() {
-          errorMessage = e.toString();
-        });
-      }
+    } catch (e) {
+      setState(() {
+        errorMessage = e.toString();
+      });
     }
     calculatePercentage(userProvider.calories, userProvider.carbs, userProvider.fats, userProvider.protein);
-    await userProvider.getTotalCalories();
   }
 
   void calculatePercentage(int calories, int carbs, int fats, int protein) {
@@ -190,7 +173,7 @@ class MainPageState extends State<MainPage> {
                   child: VerticalScrollable(
                     child: Column(
                       children: [
-                        DateSelectionWidget(),
+                        DateSelectionWidget(page: "main"),
                         SizedBox(height: 10),
                         Container(
                           padding: EdgeInsets.all(15),

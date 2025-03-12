@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hbm/screens/provider/date_provider.dart';
 import 'package:flutter_hbm/screens/provider/user_provider.dart';
 import 'package:flutter_hbm/screens/services/exercise_service.dart';
 import 'package:flutter_hbm/widgets/horizontal_scroll.dart';
@@ -35,8 +36,9 @@ class ExercisePageState extends State<ExercisePage> {
   void initState() {
     super.initState();
     controllersListening();
-    Future.microtask(() async {
-      await loadExerciseData(DateTime.now().toIso8601String().split("T")[0]);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final dateProvider = Provider.of<DateProvider>(context, listen: false);
+      dateProvider.updateDate(context, DateTime.now(), "exercise");
     });
   }
 
@@ -70,6 +72,15 @@ class ExercisePageState extends State<ExercisePage> {
   }
 
   void controllersListening() {
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
+    dateProvider.addListener(() {
+      if (dateProvider.currentPage! == "exercise") {
+        if (!mounted) return;
+        Future.microtask(() async {
+          await loadExerciseData(dateProvider.selectedDate.toIso8601String().split("T")[0]);
+        });
+      }
+    });
     hoursControllerL.addListener(() {
       if (hoursControllerL.text.isNotEmpty && minutesControllerL.text.isEmpty) {
         minutesControllerL.text = '0';
@@ -94,16 +105,19 @@ class ExercisePageState extends State<ExercisePage> {
 
   Future<void> saveCardioData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
+    String formattedDate = dateProvider.selectedDate.toIso8601String().split("T")[0];
 
     try {
       final cardioData = {
+        "date": formattedDate,
         "durationInMinutes" : calculateDurationInMinutes(int.tryParse(hoursControllerC.text)!, int.tryParse(minutesControllerC.text)!),
         "caloriesBurned" : int.tryParse(caloriesBurnedControllerC.text)!,
         "steps" : int.tryParse(stepsController.text)!
       };
 
       await ExerciseService.saveCardioData(cardioData);
-      await userProvider.updateCaloriesBurned(int.tryParse(caloriesBurnedControllerC.text)!, false,
+      await userProvider.updateCaloriesBurned(int.tryParse(caloriesBurnedControllerC.text)!, false, formattedDate,
           hoursC: int.tryParse(hoursControllerC.text)!, minutesC: int.tryParse(minutesControllerC.text)!,
           steps: int.tryParse(stepsController.text)!);
     } catch (e) {
@@ -115,17 +129,20 @@ class ExercisePageState extends State<ExercisePage> {
 
   Future<void> saveLiftingData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
+    String formattedDate = dateProvider.selectedDate.toIso8601String().split("T")[0];
     int caloriesBurned = calculateCaloriesBurnedAfterLifting();
 
     try {
       final liftingData = {
+        "date": formattedDate,
         "workoutActivityLevel" : selectedActivityLevel,
         "durationInMinutes" : calculateDurationInMinutes(int.tryParse(hoursControllerL.text)!, int.tryParse(minutesControllerL.text)!),
         "caloriesBurned" : caloriesBurned
       };
 
       await ExerciseService.saveLiftingData(liftingData);
-      await userProvider.updateCaloriesBurned(caloriesBurned, true);
+      await userProvider.updateCaloriesBurned(caloriesBurned, true, formattedDate);
     } catch (e) {
       setState(() {
         errorMessageLifting = e.toString();
@@ -190,7 +207,7 @@ class ExercisePageState extends State<ExercisePage> {
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(width: 10),
-                            Flexible(child: DateSelectionWidget()),
+                            Flexible(child: DateSelectionWidget(page: "exercise")),
                           ],
                         ),
                         SizedBox(height: 10),

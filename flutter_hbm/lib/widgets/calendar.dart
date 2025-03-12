@@ -1,37 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../screens/provider/date_provider.dart';
 
-class DateSelectionWidget extends StatefulWidget {
-  const DateSelectionWidget({super.key});
+class DateSelectionWidget extends StatelessWidget {
+  final String page;
 
-  @override
-  DateSelectionWidgetState createState() => DateSelectionWidgetState();
-}
+  const DateSelectionWidget({super.key, required this.page});
 
-class DateSelectionWidgetState extends State<DateSelectionWidget> {
-  DateTime selectedDate = DateTime.now();
-
-  void updateDate(int days) {
-    setState(() {
-      selectedDate = selectedDate.add(Duration(days: days));
-    });
+  void updateDate(BuildContext context, int days) {
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
+    dateProvider.updateDate(context, dateProvider.selectedDate.add(Duration(days: days)), page);
   }
 
   Future<void> selectDate(BuildContext context) async {
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: dateProvider.selectedDate,
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
+
+    if (picked != null && picked != dateProvider.selectedDate) {
+      dateProvider.updateDate(context, picked, page);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final dateProvider = Provider.of<DateProvider>(context);
     return Container(
       padding: EdgeInsets.all(5),
       decoration: BoxDecoration(
@@ -40,7 +37,7 @@ class DateSelectionWidgetState extends State<DateSelectionWidget> {
       child: Row(
         children: [
           InkWell(
-            onTap: () => updateDate(-1),
+            onTap: ()  => updateDate(context, -1),
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
@@ -57,13 +54,13 @@ class DateSelectionWidgetState extends State<DateSelectionWidget> {
                 border: Border(right: BorderSide(color: Colors.black, width: 1)),
               ),
               child: Text(
-                "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+                "${dateProvider.selectedDate.day}/${dateProvider.selectedDate.month}/${dateProvider.selectedDate.year}",
                 style: TextStyle(fontSize: 16),
               ),
             ),
           ),
           InkWell(
-            onTap: () => updateDate(1),
+            onTap: () => updateDate(context, 1),
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: Text("N", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

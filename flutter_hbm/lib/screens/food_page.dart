@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/provider/date_provider.dart';
 import 'package:flutter_hbm/screens/provider/user_provider.dart';
 import 'package:flutter_hbm/screens/services/food_service.dart';
 import 'package:flutter_hbm/screens/utils/formatters.dart';
@@ -40,8 +41,28 @@ class FoodPageState extends State<FoodPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      await loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
+    dateListening();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final dateProvider = Provider.of<DateProvider>(context, listen: false);
+      dateProvider.updateDate(context, DateTime.now(), "food");
+    });
+  }
+  @override
+  void dispose() {
+    searchController.dispose();
+    quantityController.dispose();
+    super.dispose();
+  }
+
+  void dateListening() {
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
+    dateProvider.addListener(() {
+      if (dateProvider.currentPage! == "food") {
+        if (!mounted) return;
+        Future.microtask(() async {
+          await loadFoodIntakes(dateProvider.selectedDate.toIso8601String().split("T")[0]);
+        });
+      }
     });
   }
 
@@ -106,10 +127,21 @@ class FoodPageState extends State<FoodPage> {
   Future<void> deleteFoodIntake(int id, String mealTime) async {
     if (!mounted) return;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
+    bool isDateNotToday = userProvider.isSelectedDateNotToday(dateProvider.selectedDate.toIso8601String().split("T")[0]);
 
     try {
       await FoodService.deleteFoodIntake(id);
-      await userProvider.deleteFoodIntake(id, mealTime);
+      if (isDateNotToday) {
+        var foodIntakeToDelete = foodIntakes[mealTime]!.firstWhere(
+                (food) => int.parse(food["id"]!) == id
+        );
+        int mealCalories = int.parse(foodIntakeToDelete["calories"] ?? "0");
+        userProvider.dailyCalories -= mealCalories;
+        foodIntakes[mealTime]!.removeWhere((food) => int.parse(food["id"]!) == id);
+      } else {
+        await userProvider.deleteFoodIntake(id, mealTime);
+      }
       setState(() {
         totalCalories = userProvider.dailyCalories;
       });
@@ -124,7 +156,9 @@ class FoodPageState extends State<FoodPage> {
   Future<void> updateFoodIntake() async {
     if (!mounted) return;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
     double newQuantity = double.parse(quantityController.text);
+    bool isDateNotToday = userProvider.isSelectedDateNotToday(dateProvider.selectedDate.toIso8601String().split("T")[0]);
 
     if (double.parse(foodChanged?["quantity"]) != newQuantity) {
       Map<String, dynamic> updateFoodIntake = {
@@ -134,12 +168,29 @@ class FoodPageState extends State<FoodPage> {
 
       try {
         await FoodService.updateFoodIntake(updateFoodIntake);
+        if (isDateNotToday) {
+          var foodIntakeToUpdate = foodIntakes[selectedFoodIntakeMealSection!]!.firstWhere(
+                  (food) => int.parse(food["id"]!) == int.parse(foodChanged?["id"])
+          );
+          int oldMealCalories = int.parse(foodIntakeToUpdate["calories"] ?? "0");
+          userProvider.dailyCalories -= oldMealCalories;
 
-        await userProvider.updateFoodIntakeInProvider(
-            int.parse(foodChanged?["id"]),
-            selectedFoodIntakeMealSection!,
-            newQuantity
-        );
+          foodIntakeToUpdate["quantity"] = newQuantity.toString();
+          foodIntakeToUpdate["calories"] = ((int.tryParse(foodIntakeToUpdate["caloriesPer100g"]!)!) * (newQuantity / 100)).toInt().toString();
+          foodIntakeToUpdate["carbs"] = ((double.tryParse(foodIntakeToUpdate["carbsPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
+          foodIntakeToUpdate["fats"] = ((double.tryParse(foodIntakeToUpdate["fatsPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
+          foodIntakeToUpdate["protein"] = ((double.tryParse(foodIntakeToUpdate["proteinPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
+          foodIntakeToUpdate["sugar"] = ((double.tryParse(foodIntakeToUpdate["sugarPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
+
+          int newMealCalories = int.tryParse(foodIntakeToUpdate["calories"]!) ?? 0;
+          userProvider.dailyCalories += newMealCalories;
+        } else {
+          await userProvider.updateFoodIntakeInProvider(
+              int.parse(foodChanged?["id"]),
+              selectedFoodIntakeMealSection!,
+              newQuantity
+          );
+        }
         setState(() {
           isEditing = false;
           selectedFoodIntakeId = null;
@@ -175,12 +226,14 @@ class FoodPageState extends State<FoodPage> {
   Future<void> saveFoodIntake() async {
     if (!mounted) return;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final dateProvider = Provider.of<DateProvider>(context, listen: false);
+    String formattedDate = dateProvider.selectedDate.toIso8601String().split("T")[0];
 
     try {
       final foodIntakeData = {
         "quantity": quantity,
         "mealTime": selectedMealTime.toUpperCase(),
-        "date": DateTime.now().toIso8601String().split("T")[0],
+        "date": formattedDate,
         "foodDto": {"id": selectedFood!["id"]}
       };
 
@@ -202,7 +255,13 @@ class FoodPageState extends State<FoodPage> {
         "sugarPer100g": selectedFood!["sugar"].toString(),
       };
 
-      await userProvider.saveFoodIntake(selectedMealTime, foodData);
+      bool isDateNotToday = userProvider.isSelectedDateNotToday(formattedDate);
+      if (isDateNotToday) {
+        foodIntakes[selectedMealTime]!.add(foodData);
+        userProvider.dailyCalories += int.tryParse(foodData["calories"]!) ?? 0;
+      } else {
+        await userProvider.saveFoodIntake(selectedMealTime, foodData);
+      }
       setState(() {
         totalCalories = userProvider.dailyCalories;
       });
@@ -249,7 +308,7 @@ class FoodPageState extends State<FoodPage> {
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(width: 10),
-                            Flexible(child: DateSelectionWidget(),
+                            Flexible(child: DateSelectionWidget(page: "food"),
                             ),
                           ],
                         ),

@@ -153,27 +153,40 @@ class UserProvider with ChangeNotifier {
 
   Future<void> loadExerciseData(String date) async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.containsKey("caloriesBurnedL") || prefs.containsKey("caloriesBurnedCDR")) {
-      caloriesBurnedL = prefs.getInt("caloriesBurnedL") ?? 0;
-      caloriesBurnedCDR = prefs.getInt("caloriesBurnedCDR") ?? 0;
-      hoursCDR = prefs.getInt("hoursCDR") ?? 0;
-      minutesCDR = prefs.getInt("minutesCDR") ?? 0;
-      dailySteps = prefs.getInt("dailySteps") ?? 0;
-    } else {
+    if (isSelectedDateNotToday(date)) {
       try {
-       final exerciseData = await ExerciseService.getExerciseDataByDate(date);
-       caloriesBurnedL = exerciseData["caloriesBurnedL"];
-       caloriesBurnedCDR = exerciseData["caloriesBurnedC"];
-       hoursCDR = exerciseData["hoursC"];
-       minutesCDR = exerciseData["minutesC"];
-       dailySteps = exerciseData["dailySteps"];
-       await prefs.setInt("caloriesBurnedL", caloriesBurnedL);
-       await prefs.setInt("caloriesBurnedCDR", caloriesBurnedCDR);
-       await prefs.setInt("hoursCDR", hoursCDR);
-       await prefs.setInt("minutesCDR", minutesCDR);
-       await prefs.setInt("dailySteps", dailySteps);
+        final exerciseData = await ExerciseService.getExerciseDataByDate(date);
+        caloriesBurnedL = exerciseData["caloriesBurnedL"];
+        caloriesBurnedCDR = exerciseData["caloriesBurnedC"];
+        hoursCDR = exerciseData["hoursC"];
+        minutesCDR = exerciseData["minutesC"];
+        dailySteps = exerciseData["dailySteps"];
       } catch (e) {
         throw Exception(e.toString());
+      }
+    } else {
+      if (prefs.containsKey("caloriesBurnedL") || prefs.containsKey("caloriesBurnedCDR")) {
+        caloriesBurnedL = prefs.getInt("caloriesBurnedL") ?? 0;
+        caloriesBurnedCDR = prefs.getInt("caloriesBurnedCDR") ?? 0;
+        hoursCDR = prefs.getInt("hoursCDR") ?? 0;
+        minutesCDR = prefs.getInt("minutesCDR") ?? 0;
+        dailySteps = prefs.getInt("dailySteps") ?? 0;
+      } else {
+        try {
+          final exerciseData = await ExerciseService.getExerciseDataByDate(date);
+          caloriesBurnedL = exerciseData["caloriesBurnedL"];
+          caloriesBurnedCDR = exerciseData["caloriesBurnedC"];
+          hoursCDR = exerciseData["hoursC"];
+          minutesCDR = exerciseData["minutesC"];
+          dailySteps = exerciseData["dailySteps"];
+          await prefs.setInt("caloriesBurnedL", caloriesBurnedL);
+          await prefs.setInt("caloriesBurnedCDR", caloriesBurnedCDR);
+          await prefs.setInt("hoursCDR", hoursCDR);
+          await prefs.setInt("minutesCDR", minutesCDR);
+          await prefs.setInt("dailySteps", dailySteps);
+        } catch (e) {
+          throw Exception(e.toString());
+        }
       }
     }
     notifyListeners();
@@ -181,59 +194,148 @@ class UserProvider with ChangeNotifier {
 
   Future<Map<String, List<Map<String, String>>>> loadFoodIntakes(String date) async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.containsKey("foodIntakes")) {
-      String? jsonString = prefs.getString("foodIntakes");
-      if (jsonString != null && jsonString.isNotEmpty) {
-        Map<String, dynamic> decodedFoodIntakes = jsonDecode(jsonString);
+    if (isSelectedDateNotToday(date)) {
+      try {
+        List<dynamic> intakes = await FoodService.getFoodIntakesByDate(date);
+        Map<String, List<Map<String, String>>> fetchedFoodIntakes = {
+          "Breakfast": [],
+          "Lunch": [],
+          "Dinner": [],
+          "Other": []
+        };
+        int totalCalories = 0;
+        for (var foodIntake in intakes) {
+          String mealTime = foodIntake["mealTime"].substring(0, 1) +
+              foodIntake["mealTime"].substring(1).toLowerCase();
+          Map<String, dynamic> food = foodIntake["foodDto"];
 
-        Map<String, List<Map<String, String>>> loadedFoodIntakes = {};
-        decodedFoodIntakes.forEach((key, value) {
-          loadedFoodIntakes[key] = List<Map<String, String>>.from(
-              value.map((item) => Map<String, String>.from(item))
-          );
-        });
-        await setFoodIntakes(loadedFoodIntakes);
-        return loadedFoodIntakes;
+          int mealCalories = (food["calories"] * (foodIntake["quantity"] / 100))
+              .toInt();
+
+          fetchedFoodIntakes[mealTime]!.add({
+            "id": foodIntake["id"].toString(),
+            "quantity": foodIntake["quantity"].toString(),
+            "name": food["name"],
+            "calories": mealCalories.toString(),
+            "carbs": (food["carbs"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "fats": (food["fats"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "protein": (food["protein"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "sugar": (food["sugar"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "caloriesPer100g": food["calories"].toString(),
+            "carbsPer100g": food["carbs"].toString(),
+            "fatsPer100g": food["fats"].toString(),
+            "proteinPer100g": food["protein"].toString(),
+            "sugarPer100g": food["sugar"].toString(),
+          });
+          totalCalories += mealCalories;
+        }
+        dailyCalories = totalCalories;
+        return fetchedFoodIntakes;
+      } catch (e) {
+        throw Exception(e.toString());
+      }
+    } else {
+      if (prefs.containsKey("foodIntakes")) {
+        String? jsonString = prefs.getString("foodIntakes");
+        if (jsonString != null && jsonString.isNotEmpty) {
+          Map<String, dynamic> decodedFoodIntakes = jsonDecode(jsonString);
+
+          Map<String, List<Map<String, String>>> loadedFoodIntakes = {};
+          decodedFoodIntakes.forEach((key, value) {
+            loadedFoodIntakes[key] = List<Map<String, String>>.from(
+                value.map((item) => Map<String, String>.from(item))
+            );
+          });
+          await setFoodIntakes(loadedFoodIntakes);
+          await getTotalCalories();
+          return loadedFoodIntakes;
+        }
+      }
+      try {
+        List<dynamic> intakes = await FoodService.getFoodIntakesByDate(date);
+        Map<String, List<Map<String, String>>> fetchedFoodIntakes = {
+          "Breakfast": [],
+          "Lunch": [],
+          "Dinner": [],
+          "Other": []
+        };
+
+        for (var foodIntake in intakes) {
+          String mealTime = foodIntake["mealTime"].substring(0, 1) +
+              foodIntake["mealTime"].substring(1).toLowerCase();
+          Map<String, dynamic> food = foodIntake["foodDto"];
+
+          int mealCalories = (food["calories"] * (foodIntake["quantity"] / 100)).toInt();
+
+          fetchedFoodIntakes[mealTime]!.add({
+            "id": foodIntake["id"].toString(),
+            "quantity": foodIntake["quantity"].toString(),
+            "name": food["name"],
+            "calories": mealCalories.toString(),
+            "carbs": (food["carbs"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "fats": (food["fats"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "protein": (food["protein"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "sugar": (food["sugar"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "caloriesPer100g": food["calories"].toString(),
+            "carbsPer100g": food["carbs"].toString(),
+            "fatsPer100g": food["fats"].toString(),
+            "proteinPer100g": food["protein"].toString(),
+            "sugarPer100g": food["sugar"].toString(),
+          });
+        }
+        await setFoodIntakes(fetchedFoodIntakes);
+        await getTotalCalories();
+
+        return fetchedFoodIntakes;
+      } catch (e) {
+        throw Exception(e.toString());
       }
     }
-    try {
-      List<dynamic> intakes = await FoodService.getFoodIntakesByDate(date);
-      Map<String, List<Map<String, String>>> fetchedFoodIntakes = {
-        "Breakfast": [],
-        "Lunch": [],
-        "Dinner": [],
-        "Other": []
-      };
+  }
 
-      for (var foodIntake in intakes) {
-        String mealTime = foodIntake["mealTime"].substring(0, 1) +
-            foodIntake["mealTime"].substring(1).toLowerCase();
-        Map<String, dynamic> food = foodIntake["foodDto"];
-
-        int mealCalories = (food["calories"] * (foodIntake["quantity"] / 100)).toInt();
-
-        fetchedFoodIntakes[mealTime]!.add({
-          "id": foodIntake["id"].toString(),
-          "quantity": foodIntake["quantity"].toString(),
-          "name": food["name"],
-          "calories": mealCalories.toString(),
-          "carbs": (food["carbs"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
-          "fats": (food["fats"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
-          "protein": (food["protein"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
-          "sugar": (food["sugar"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
-          "caloriesPer100g": food["calories"].toString(),
-          "carbsPer100g": food["carbs"].toString(),
-          "fatsPer100g": food["fats"].toString(),
-          "proteinPer100g": food["protein"].toString(),
-          "sugarPer100g": food["sugar"].toString(),
+  Future<void> loadUserCalories(String date) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (isSelectedDateNotToday(date)) {
+      try {
+        final foodIntakesForTheDate = await loadFoodIntakes(date);
+        int totalCalories = 0;
+        int totalCarbs = 0;
+        int totalProtein = 0;
+        int totalFats = 0;
+        foodIntakesForTheDate.forEach((mealTime, foods) {
+          for (var food in foods) {
+            totalCalories += int.parse(food["calories"] ?? "0");
+            totalCarbs += double.parse(food["carbs"] ?? "0").round();
+            totalProtein += double.parse(food["protein"] ?? "0").round();
+            totalFats += double.parse(food["fats"] ?? "0").round();
+          }
         });
+        dailyCalories = totalCalories;
+        dailyCarbs = totalCarbs;
+        dailyProtein = totalProtein;
+        dailyFats = totalFats;
+        await loadExerciseData(date);
+      } catch (e) {
+        throw Exception(e.toString());
       }
-      await setFoodIntakes(fetchedFoodIntakes);
+      notifyListeners();
+    } else {
+      if (prefs.containsKey("calories")) {
+        calories = prefs.getInt("calories") ?? 0;
+        protein = prefs.getInt("protein") ?? 0;
+        carbs = prefs.getInt("carbs") ?? 0;
+        fats = prefs.getInt("fats") ?? 0;
+        water = prefs.getDouble("water") ?? 0.0;
+        if (prefs.containsKey("dailyCalories")) {
+          dailyCalories = prefs.getInt("dailyCalories") ?? 0;
+          dailyCarbs = prefs.getInt("dailyCarbs") ?? 0;
+          dailyProtein = prefs.getInt("dailyProtein") ?? 0;
+          dailyFats = prefs.getInt("dailyFats") ?? 0;
+          caloriesBurnedL = prefs.getInt("caloriesBurnedL") ?? 0;
+          caloriesBurnedCDR = prefs.getInt("caloriesBurnedCDR") ?? 0;
+        }
+      }
       await getTotalCalories();
-
-      return fetchedFoodIntakes;
-    } catch (e) {
-      throw Exception(e.toString());
     }
   }
 
@@ -380,30 +482,45 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateCaloriesBurned(int caloriesBurned, bool isLifting, {int hoursC = 0, int minutesC = 0, int steps = 0}) async {
+  Future<void> updateCaloriesBurned(int caloriesBurned, bool isLifting, String date ,{int hoursC = 0, int minutesC = 0, int steps = 0}) async {
     if (isLifting) {
-      final prefs = await SharedPreferences.getInstance();
-      int currentCaloriesBurnedL = prefs.getInt("caloriesBurnedL") ?? 0;
-      await prefs.setInt("caloriesBurnedL", currentCaloriesBurnedL + caloriesBurned);
-      caloriesBurnedL = currentCaloriesBurnedL + caloriesBurned;
-    } else {
-      final prefs = await SharedPreferences.getInstance();
-      int currentCaloriesBurnedCDR = prefs.getInt("caloriesBurnedCDR") ?? 0;
-      int currentHoursCDR = prefs.getInt("hoursCDR") ?? 0;
-      int currentMinutesCDR = prefs.getInt("minutesCDR") ?? 0;
-      int currentDailySteps = prefs.getInt("dailySteps") ?? 0;
-      if (currentMinutesCDR + minutesC >= 60) {
-        currentHoursCDR += ((currentMinutesCDR + minutesC) / 60).toInt();
-        currentMinutesCDR -= 60;
+      if (isSelectedDateNotToday(date)) {
+        caloriesBurnedL += caloriesBurned;
+      } else {
+        final prefs = await SharedPreferences.getInstance();
+        int currentCaloriesBurnedL = prefs.getInt("caloriesBurnedL") ?? 0;
+        await prefs.setInt("caloriesBurnedL", currentCaloriesBurnedL + caloriesBurned);
+        caloriesBurnedL = currentCaloriesBurnedL + caloriesBurned;
       }
-      await prefs.setInt("caloriesBurnedCDR", currentCaloriesBurnedCDR + caloriesBurned);
-      await prefs.setInt("hoursCDR", currentHoursCDR + hoursC);
-      await prefs.setInt("minutesCDR", currentMinutesCDR + minutesC);
-      await prefs.setInt("dailySteps", currentDailySteps + steps);
-      caloriesBurnedCDR = currentCaloriesBurnedCDR + caloriesBurned;
-      hoursCDR = currentHoursCDR + hoursC;
-      minutesCDR = currentMinutesCDR + minutesC;
-      dailySteps = currentDailySteps + steps;
+    } else {
+      if (isSelectedDateNotToday(date)) {
+        if (minutesCDR + minutesC >= 60) {
+          hoursCDR += ((minutesCDR + minutesC) / 60).toInt();
+          minutesCDR -= 60;
+        }
+        caloriesBurnedCDR += caloriesBurned;
+        hoursCDR += hoursC;
+        minutesCDR += minutesC;
+        dailySteps += steps;
+      } else {
+        final prefs = await SharedPreferences.getInstance();
+        int currentCaloriesBurnedCDR = prefs.getInt("caloriesBurnedCDR") ?? 0;
+        int currentHoursCDR = prefs.getInt("hoursCDR") ?? 0;
+        int currentMinutesCDR = prefs.getInt("minutesCDR") ?? 0;
+        int currentDailySteps = prefs.getInt("dailySteps") ?? 0;
+        if (currentMinutesCDR + minutesC >= 60) {
+          currentHoursCDR += ((currentMinutesCDR + minutesC) / 60).toInt();
+          currentMinutesCDR -= 60;
+        }
+        await prefs.setInt("caloriesBurnedCDR", currentCaloriesBurnedCDR + caloriesBurned);
+        await prefs.setInt("hoursCDR", currentHoursCDR + hoursC);
+        await prefs.setInt("minutesCDR", currentMinutesCDR + minutesC);
+        await prefs.setInt("dailySteps", currentDailySteps + steps);
+        caloriesBurnedCDR = currentCaloriesBurnedCDR + caloriesBurned;
+        hoursCDR = currentHoursCDR + hoursC;
+        minutesCDR = currentMinutesCDR + minutesC;
+        dailySteps = currentDailySteps + steps;
+      }
     }
     notifyListeners();
   }
@@ -435,5 +552,13 @@ class UserProvider with ChangeNotifier {
     imageUrl = "";
     foodIntakes.clear();
     notifyListeners();
+  }
+
+  bool isSelectedDateNotToday(String date) {
+    DateTime selectedDate = DateTime.parse(date);
+
+    DateTime currentDate = DateTime.now();
+    currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
+    return selectedDate.isBefore(currentDate) || selectedDate.isAfter(currentDate);
   }
 }

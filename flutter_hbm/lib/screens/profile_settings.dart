@@ -58,6 +58,18 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     });
   }
 
+  @override
+  void dispose() {
+    weightController.dispose();
+    goalWeightController.dispose();
+    stepsController.dispose();
+    carbsController.dispose();
+    fatsController.dispose();
+    proteinController.dispose();
+    waterController.dispose();
+    super.dispose();
+  }
+
   void caloriesEditMode() {
     previousCarbs = carbsController.text;
     previousFats = fatsController.text;
