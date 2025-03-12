@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/login_form.dart';
 import 'package:flutter_hbm/screens/main_page.dart';
+import 'package:flutter_hbm/screens/provider/date_provider.dart';
 import 'package:flutter_hbm/screens/provider/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +14,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => DateProvider())
       ],
       child: MyApp(),
     ),
