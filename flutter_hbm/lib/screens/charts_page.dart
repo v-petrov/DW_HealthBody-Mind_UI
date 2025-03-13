@@ -1,8 +1,9 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/services/charts_service.dart';
 import 'package:flutter_hbm/widgets/horizontal_scroll.dart';
 import 'package:flutter_hbm/widgets/vertical_scroll.dart';
 import '../widgets/main_layout.dart';
+import '../widgets/generic_chart.dart';
 
 class ChartsPage extends StatefulWidget {
   const ChartsPage({super.key});
@@ -14,6 +15,58 @@ class ChartsPage extends StatefulWidget {
 class ChartsPageState extends State<ChartsPage> {
   String selectedChart = "Calories Intake";
   String selectedPeriod = "Last 7 Days";
+  int defaultDays = 7;
+  Future<Map<String, dynamic>>? dataForEachDate;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      await fetchDataForSelectedChart();
+    });
+  }
+
+  Future<void> fetchDataForSelectedChart() async {
+    String chartType = selectedChart.toUpperCase().replaceAll(" ", "_");
+
+    try {
+      final data = await ChartsService.getChartDataForAPeriod(defaultDays, chartType);
+      setState(() {
+        dataForEachDate = Future.value(data);
+      });
+    } catch (e) {
+      setState(() {
+        dataForEachDate = Future.error(e.toString());
+      });
+    }
+  }
+
+  Widget getChartWidget(Map<String, dynamic> chartData) {
+    switch (selectedChart) {
+      case "Calories Intake":
+        return GenericChartWidget(
+          chartData: chartData,
+        );
+      case "Burned Calories":
+        return GenericChartWidget(
+          chartData: chartData,
+        );
+      case "Carbs Intake":
+        return GenericChartWidget(
+          chartData: chartData,
+        );
+      case "Fat Intake":
+        return GenericChartWidget(
+          chartData: chartData,
+        );
+      case "Protein Intake":
+        return GenericChartWidget(
+          chartData: chartData,
+        );
+      default:
+        return Text("Chart not available");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,15 +103,15 @@ class ChartsPageState extends State<ChartsPage> {
                               onChanged: (String? newValue) {
                                 setState(() {
                                   selectedChart = newValue!;
+                                  fetchDataForSelectedChart();
                                 });
                               },
                               items: [
                                 "Calories Intake",
                                 "Burned Calories",
-                                "Kilograms",
-                                "Carbs",
-                                "Fat",
-                                "Protein"
+                                "Carbs Intake",
+                                "Fat Intake",
+                                "Protein Intake"
                               ].map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
@@ -80,6 +133,8 @@ class ChartsPageState extends State<ChartsPage> {
                               onPressed: (int index) {
                                 setState(() {
                                   selectedPeriod = index == 0 ? "Last 7 Days" : "Last 30 Days";
+                                  defaultDays = index == 0 ? 7 : 30;
+                                  fetchDataForSelectedChart();
                                 });
                               },
                               borderRadius: BorderRadius.circular(5),
@@ -97,8 +152,21 @@ class ChartsPageState extends State<ChartsPage> {
                           ],
                         ),
                         SizedBox(height: 40),
-                        Center(
-                          child: CaloriesIntakeChart(),
+                        FutureBuilder<Map<String, dynamic>>(
+                          future: dataForEachDate,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return CircularProgressIndicator();
+                            }
+                            if (snapshot.hasError) {
+                              return Text("Error loading data: ${snapshot.error}");
+                            }
+                            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                              return Text("No data available");
+                            }
+
+                            return getChartWidget(snapshot.data!);
+                          },
                         ),
                       ],
                     ),
@@ -109,77 +177,6 @@ class ChartsPageState extends State<ChartsPage> {
           );
         },
       ),
-    );
-  }
-}
-
-class CaloriesIntakeChart extends StatelessWidget {
-  final List<double> caloriesData = [2200, 2111, 2500, 2300, 2000, 2400, 2150];
-  final List<String> dates = ["1/02", "2/02", "3/02", "4/02", "5/02", "6/02", "7/02"];
-
-  CaloriesIntakeChart({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SizedBox(
-          width: constraints.maxWidth,
-          height: constraints.maxWidth * 0.35,
-          child: LineChart(
-            LineChartData(
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      return Text(value.toInt().toString(), style: TextStyle(fontSize: 12));
-                    },
-                  ),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 1,
-                    getTitlesWidget: (double value, TitleMeta meta) {
-                      int index = value.toInt();
-                      return SideTitleWidget(
-                        fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
-                        meta: meta,
-                        child: Text(dates[index]),
-                      );
-                    },
-                  ),
-                ),
-                rightTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: false,
-                  ),
-                ),
-                topTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: false,
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(
-                show: true,
-                border: Border.all(color: Colors.black, width: 1),
-              ),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: List.generate(caloriesData.length, (index) => FlSpot(index.toDouble(), caloriesData[index])),
-                  isCurved: true,
-                  color: Colors.blue,
-                  dotData: FlDotData(show: true),
-                  belowBarData: BarAreaData(show: false),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
