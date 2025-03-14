@@ -65,6 +65,10 @@ class MainPageState extends State<MainPage> {
     fatsProc = 100 - proteinProc - carbsProc;
   }
 
+  double calculatesProgress(int consumed, int goal) {
+    return (consumed / goal).clamp(0.0, 1.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context, listen: true);
@@ -105,7 +109,11 @@ class MainPageState extends State<MainPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            buildGoalCircle("${userProvider.calories - userProvider.dailyCalories} cal"),
+                            buildGoalProgressCircle(
+                              calculatesProgress(userProvider.dailyCalories, userProvider.calories),
+                              "${userProvider.calories - userProvider.dailyCalories} cal",
+                              Colors.blue,
+                            ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -124,7 +132,11 @@ class MainPageState extends State<MainPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            buildGoalCircle("${userProvider.water} L"),
+                            buildGoalProgressCircle(
+                              calculatesProgress(0, userProvider.water.toInt()),
+                              "${userProvider.water} L",
+                              Colors.blue,
+                            ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -154,9 +166,15 @@ class MainPageState extends State<MainPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            buildMacroCircle("${userProvider.carbs - userProvider.dailyCarbs} g", "Carbs", "Goal: ${userProvider.carbs} g", "$carbsProc%"),
-                            buildMacroCircle("${userProvider.protein - userProvider.dailyProtein} g", "Protein", "Goal: ${userProvider.protein} g", "$proteinProc%"),
-                            buildMacroCircle("${userProvider.fats - userProvider.dailyFats} g", "Fat", "Goal: ${userProvider.fats} g", "$fatsProc%"),
+                            buildMacroCircle(calculatesProgress(userProvider.dailyCarbs, userProvider.carbs),
+                              "${userProvider.carbs - userProvider.dailyCarbs} g", Colors.blue,
+                              "Carbs", "Goal: ${userProvider.carbs} g", "$carbsProc%"),
+                            buildMacroCircle(calculatesProgress(userProvider.dailyProtein, userProvider.protein),
+                                "${userProvider.protein - userProvider.dailyProtein} g", Colors.blue,
+                                "Protein", "Goal: ${userProvider.protein} g", "$proteinProc%"),
+                            buildMacroCircle(calculatesProgress(userProvider.dailyFats, userProvider.fats),
+                                "${userProvider.fats - userProvider.dailyFats} g", Colors.blue,
+                                "Fats", "Goal: ${userProvider.fats} g", "$fatsProc%")
                           ],
                         ),
                       ],

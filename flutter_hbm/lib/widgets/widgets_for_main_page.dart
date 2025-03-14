@@ -37,25 +37,9 @@ Widget menuButton(BuildContext context, String title) {
   );
 }
 
-Widget buildGoalCircle(String text) {
-  return Container(
-    width: 100,
-    height: 100,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      border: Border.all(color: Colors.black, width: 4),
-    ),
+Widget buildGoalProgressCircle(double progress, String text, Color progressColor) {
+  return Stack(
     alignment: Alignment.center,
-    child: Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-    ),
-  );
-}
-
-Widget buildMacroCircle(String topText, String macroName, String goalText, String percentage) {
-  return Column(
     children: [
       Container(
         width: 100,
@@ -64,12 +48,60 @@ Widget buildMacroCircle(String topText, String macroName, String goalText, Strin
           shape: BoxShape.circle,
           border: Border.all(color: Colors.black, width: 4),
         ),
-        alignment: Alignment.center,
-        child: Text(
-          topText,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      SizedBox(
+        width: 100,
+        height: 100,
+        child: CircularProgressIndicator(
+          value: progress,
+          strokeWidth: 6,
+          backgroundColor: Colors.grey[300],
+          valueColor: AlwaysStoppedAnimation<Color>(progressColor),
         ),
+      ),
+      Positioned(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+      ),
+    ],
+  );
+}
+
+Widget buildMacroCircle(double progress, String text, Color progressColor, String macroName, String goalText, String percentage) {
+  return Column(
+    children: [
+      Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.black, width: 4),
+            ),
+          ),
+          SizedBox(
+            width: 100,
+            height: 100,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 6,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            ),
+          ),
+          Positioned(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+        ],
       ),
       SizedBox(height: 10),
       Text(
