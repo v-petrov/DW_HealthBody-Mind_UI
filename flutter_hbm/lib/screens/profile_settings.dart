@@ -296,8 +296,8 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             buildProfileField("Name:", "${userProvider.firstName} ${userProvider.lastName}"),
-                            buildProfileField("Date of birth:", userProvider.dateOfBirth),
-                            buildProfileField("Gender:", userProvider.gender),
+                            buildProfileField("Date of birth:", ProfilePageStringFormatter.formatDateInProfile(userProvider.dateOfBirth)),
+                            buildProfileField("Gender:", ProfilePageStringFormatter.formatGender(userProvider.gender)),
                             buildProfileField("Height:", "${userProvider.height} cm"),
                             SizedBox(height: 50),
                             Center(
@@ -391,7 +391,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                     ),
                                   ),
                                   SizedBox(height: 60),
-                                  buildGoalRow("Calories:", "${userProvider.calories}"),
+                                  buildGoalRow("Calories:", "${userProvider.calories} cal"),
                                   SizedBox(height: 20),
                                   isEditingNG
                                       ? Row(
@@ -432,7 +432,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                       ),
                                     ],
                                   )
-                                      : buildGoalRow("Carbs:", "${userProvider.carbs} ($carbsProc%)"),
+                                      : buildGoalRow("Carbs:", "${userProvider.carbs}g ($carbsProc%)"),
                                   SizedBox(height: 20),
                                   isEditingNG
                                       ? Row(
@@ -473,7 +473,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                       ),
                                     ],
                                   )
-                                      : buildGoalRow("Fats:", "${userProvider.fats} ($fatsProc%)"),
+                                      : buildGoalRow("Fats:", "${userProvider.fats}g ($fatsProc%)"),
                                   SizedBox(height: 20),
                                   isEditingNG
                                       ? Row(
@@ -514,7 +514,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                       ),
                                     ],
                                   )
-                                      : buildGoalRow("Protein:", "${userProvider.protein} ($proteinProc%)"),
+                                      : buildGoalRow("Protein:", "${userProvider.protein}g ($proteinProc%)"),
                                   SizedBox(height: 20),
                                   isEditingNG
                                       ? Row(
@@ -672,7 +672,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                         ),
                                       ],
                                     )
-                                        : buildTextFieldWithLabel("Goal:", userProvider.goal.replaceAll("_", " ")),
+                                        : buildTextFieldWithLabel("Goal:", ProfilePageStringFormatter.formatGoal(userProvider.goal)),
                                     if (goalError != null)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 5.0, left: 8.0),
@@ -711,7 +711,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                         ),
                                       ],
                                     )
-                                        : buildTextFieldWithLabel("Activity Level:", userProvider.activityLevel.replaceAll("_", " ")),
+                                        : buildTextFieldWithLabel("Activity Level:", ProfilePageStringFormatter.formatActivityLevel(userProvider.activityLevel)),
                                     Padding(
                                       padding: const EdgeInsets.only(bottom: 10.0),
                                       child: Row(
@@ -767,7 +767,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                         ),
                                       ],
                                     )
-                                        : buildTextFieldWithLabel("Weekly Goal:", userProvider.weeklyGoal.replaceAll("_", " ")),
+                                        : buildTextFieldWithLabel("Weekly Goal:", ProfilePageStringFormatter.formatUserGoal(userProvider.weeklyGoal)),
                                     if (weeklyGoalError != null)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 5.0, left: 8.0),
@@ -807,6 +807,8 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                       child: ElevatedButton(
                                         onPressed: () async {
                                           if (isEditingWG) {
+                                            weightController.text = "${weightController.text}KG";
+                                            goalWeightController.text = "${goalWeightController.text}KG";
                                             validateGoal("Goal");
                                             validateWeight(weightController.text);
                                             validateWeeklyGoal();
@@ -824,6 +826,8 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                             }
                                           } else {
                                             weightEditMode();
+                                            weightController.text = weightController.text.replaceAll("KG", "");
+                                            goalWeightController.text = goalWeightController.text.replaceAll("KG", "");
                                           }
                                           setState(() {
                                             isEditingWG = !isEditingWG;
