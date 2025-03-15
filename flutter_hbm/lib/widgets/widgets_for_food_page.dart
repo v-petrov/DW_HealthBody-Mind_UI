@@ -85,7 +85,7 @@ Widget buildMealSection(String mealSection, Map<String, List<Map<String, String>
                                   flex: 2,
                                   child: Row(
                                     children: [
-                                      buildDataCell("${food["quantity"]}g"),
+                                      buildDataCell("${food["quantity"]}${food["name"] == "water" ? "ml" : "g"}"),
                                       buildDataCell("${food["calories"]}cal"),
                                       buildDataCell("${food["carbs"]}g"),
                                       buildDataCell("${food["fats"]}g"),

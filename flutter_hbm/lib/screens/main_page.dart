@@ -17,7 +17,7 @@ class MainPage extends StatefulWidget {
 
 class MainPageState extends State<MainPage> {
   int goalCalories = 0;
-  double goalWater = 0.0;
+  int goalWater = 0;
   int proteinProc = 0, carbsProc = 0, fatsProc = 0;
   String? errorMessage;
 
@@ -49,7 +49,7 @@ class MainPageState extends State<MainPage> {
       await userProvider.loadUserCalories(date);
       setState(() {
         goalCalories = userProvider.calories;
-        goalWater = userProvider.water * 1000;
+        goalWater = (userProvider.water * 1000).toInt();
       });
     } catch (e) {
       setState(() {
@@ -133,14 +133,14 @@ class MainPageState extends State<MainPage> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             buildGoalProgressCircle(
-                              calculatesProgress(0, userProvider.water.toInt()),
-                              "${userProvider.water} L",
+                              calculatesProgress(userProvider.dailyWater, goalWater),
+                              "${userProvider.water - userProvider.dailyWater / 1000} L",
                               Colors.blue,
                             ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                SizedBox(width: 50),
+                                SizedBox(width: 60),
                                 Text("Goal", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                                 Text("$goalWater ml", style: TextStyle(fontSize: 14)),
                               ],

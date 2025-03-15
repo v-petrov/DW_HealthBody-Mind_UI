@@ -136,8 +136,12 @@ class FoodPageState extends State<FoodPage> {
         var foodIntakeToDelete = foodIntakes[mealTime]!.firstWhere(
                 (food) => int.parse(food["id"]!) == id
         );
-        int mealCalories = int.parse(foodIntakeToDelete["calories"] ?? "0");
-        userProvider.dailyCalories -= mealCalories;
+        if (foodIntakeToDelete["name"] == "water") {
+          userProvider.dailyWater -= (double.parse(foodIntakeToDelete["quantity"] ?? "0")).round();
+        } else {
+          int mealCalories = int.parse(foodIntakeToDelete["calories"] ?? "0");
+          userProvider.dailyCalories -= mealCalories;
+        }
         foodIntakes[mealTime]!.removeWhere((food) => int.parse(food["id"]!) == id);
       } else {
         await userProvider.deleteFoodIntake(id, mealTime);
@@ -172,20 +176,25 @@ class FoodPageState extends State<FoodPage> {
           var foodIntakeToUpdate = foodIntakes[selectedFoodIntakeMealSection!]!.firstWhere(
                   (food) => int.parse(food["id"]!) == int.parse(foodChanged?["id"])
           );
-          int oldMealCalories = int.parse(foodIntakeToUpdate["calories"] ?? "0");
-          userProvider.dailyCalories -= oldMealCalories;
+          if (foodIntakeToUpdate["name"] == "water") {
+            userProvider.dailyWater -= (double.parse(foodIntakeToUpdate["quantity"] ?? "0")).round();
+            foodIntakeToUpdate["quantity"] = newQuantity.toString();
+            userProvider.dailyWater += (double.parse(foodIntakeToUpdate["quantity"] ?? "0")).round();
+          } else {
+            int oldMealCalories = int.parse(foodIntakeToUpdate["calories"] ?? "0");
+            userProvider.dailyCalories -= oldMealCalories;
+            foodIntakeToUpdate["quantity"] = newQuantity.toString();
+            foodIntakeToUpdate["calories"] = ((int.tryParse(foodIntakeToUpdate["caloriesPer100g"]!)!) * (newQuantity / 100)).toInt().toString();
+            foodIntakeToUpdate["carbs"] = ((double.tryParse(foodIntakeToUpdate["carbsPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
+            foodIntakeToUpdate["fats"] = ((double.tryParse(foodIntakeToUpdate["fatsPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
+            foodIntakeToUpdate["protein"] = ((double.tryParse(foodIntakeToUpdate["proteinPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
+            foodIntakeToUpdate["sugar"] = ((double.tryParse(foodIntakeToUpdate["sugarPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
 
-          foodIntakeToUpdate["quantity"] = newQuantity.toString();
-          foodIntakeToUpdate["calories"] = ((int.tryParse(foodIntakeToUpdate["caloriesPer100g"]!)!) * (newQuantity / 100)).toInt().toString();
-          foodIntakeToUpdate["carbs"] = ((double.tryParse(foodIntakeToUpdate["carbsPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
-          foodIntakeToUpdate["fats"] = ((double.tryParse(foodIntakeToUpdate["fatsPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
-          foodIntakeToUpdate["protein"] = ((double.tryParse(foodIntakeToUpdate["proteinPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
-          foodIntakeToUpdate["sugar"] = ((double.tryParse(foodIntakeToUpdate["sugarPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
-
-          int newMealCalories = int.tryParse(foodIntakeToUpdate["calories"]!) ?? 0;
-          userProvider.dailyCalories += newMealCalories;
+            int newMealCalories = int.tryParse(foodIntakeToUpdate["calories"]!) ?? 0;
+            userProvider.dailyCalories += newMealCalories;
+          }
         } else {
-          await userProvider.updateFoodIntakeInProvider(
+          await userProvider.updateFoodIntake(
               int.parse(foodChanged?["id"]),
               selectedFoodIntakeMealSection!,
               newQuantity
@@ -248,6 +257,7 @@ class FoodPageState extends State<FoodPage> {
         "fats": (selectedFood!["fats"] * (quantity / 100)).toStringAsFixed(1),
         "protein": (selectedFood!["protein"] * (quantity / 100)).toStringAsFixed(1),
         "sugar": (selectedFood!["sugar"] * (quantity / 100)).toStringAsFixed(1),
+        "measurement" : selectedFood!["measurement"].toString(),
         "caloriesPer100g": selectedFood!["calories"].toString(),
         "carbsPer100g": selectedFood!["carbs"].toString(),
         "fatsPer100g": selectedFood!["fats"].toString(),
@@ -258,7 +268,11 @@ class FoodPageState extends State<FoodPage> {
       bool isDateNotToday = userProvider.isSelectedDateNotToday(formattedDate);
       if (isDateNotToday) {
         foodIntakes[selectedMealTime]!.add(foodData);
-        userProvider.dailyCalories += int.tryParse(foodData["calories"]!) ?? 0;
+        if (foodData["name"] == "water") {
+          userProvider.dailyWater += quantity.round();
+        } else {
+          userProvider.dailyCalories += int.tryParse(foodData["calories"]!) ?? 0;
+        }
       } else {
         await userProvider.saveFoodIntake(selectedMealTime, foodData);
       }
@@ -389,7 +403,7 @@ class FoodPageState extends State<FoodPage> {
                               child: TextField(
                                 controller: searchController,
                                 decoration: InputDecoration(
-                                  labelText: "Search your food here:",
+                                  labelText: "Search your food or drink here:",
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -509,7 +523,7 @@ class FoodPageState extends State<FoodPage> {
                                         borderRadius: BorderRadius.circular(5),
                                       ),
                                       child: Text(
-                                        selectedFood?["measurement"] ?? "G",
+                                        selectedFood?["measurement"] ?? foodChanged?["measurement"] ?? "G",
                                         style: TextStyle(fontSize: 16),
                                       ),
                                     ),

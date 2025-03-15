@@ -25,7 +25,7 @@ class UserProvider with ChangeNotifier {
   int dailyProtein = 0;
   int dailyCarbs = 0;
   int dailyFats = 0;
-  double dailyWater = 0.0;
+  int dailyWater = 0;
   int steps = 0;
   int calories = 0;
   int protein = 0;
@@ -60,27 +60,35 @@ class UserProvider with ChangeNotifier {
       int totalCarbs = 0;
       int totalProtein = 0;
       int totalFats = 0;
+      int totalWater = 0;
       foodIntakes.forEach((mealTime, foods) {
         for (var food in foods) {
-          totalCalories += int.parse(food["calories"] ?? "0");
-          totalCarbs += double.parse(food["carbs"] ?? "0").round();
-          totalProtein += double.parse(food["protein"] ?? "0").round();
-          totalFats += double.parse(food["fats"] ?? "0").round();
+          if (food["name"] == "water") {
+            totalWater += (double.parse(food["quantity"] ?? "0")).round();
+          } else {
+            totalCalories += int.parse(food["calories"] ?? "0");
+            totalCarbs += double.parse(food["carbs"] ?? "0").round();
+            totalProtein += double.parse(food["protein"] ?? "0").round();
+            totalFats += double.parse(food["fats"] ?? "0").round();
+          }
         }
       });
       await prefs.setInt("dailyCalories", totalCalories);
       await prefs.setInt("dailyCarbs", totalCarbs);
       await prefs.setInt("dailyProtein", totalProtein);
       await prefs.setInt("dailyFats", totalFats);
-      dailyCalories =  totalCalories;
-      dailyCarbs =  totalCarbs;
-      dailyProtein =  totalProtein;
-      dailyFats =  totalFats;
+      await prefs.setInt("dailyWater", totalWater);
+      dailyCalories = totalCalories;
+      dailyCarbs = totalCarbs;
+      dailyProtein = totalProtein;
+      dailyFats = totalFats;
+      dailyWater = totalWater;
     } else {
       dailyCalories = prefs.getInt("dailyCalories")!;
       dailyCarbs = prefs.getInt("dailyCarbs")!;
       dailyProtein = prefs.getInt("dailyProtein")!;
       dailyFats = prefs.getInt("dailyFats")!;
+      dailyWater = prefs.getInt("dailyWater")!;
     }
     notifyListeners();
   }
@@ -91,12 +99,17 @@ class UserProvider with ChangeNotifier {
     String jsonFoodIntakes = jsonEncode(foodIntakes);
     await prefs.setString("foodIntakes", jsonFoodIntakes);
 
-    int mealCalories = int.parse(foodData["calories"] ?? "0");
-    int mealCarbs = double.parse(foodData["carbs"] ?? "0").round();
-    int mealProtein = double.parse(foodData["protein"] ?? "0").round();
-    int mealFats = double.parse(foodData["fats"] ?? "0").round();
+    int water = 0, mealCalories = 0, mealCarbs = 0, mealProtein = 0, mealFats = 0;
+    if (foodData["name"] == "water") {
+      water = (double.parse(foodData["quantity"] ?? "0")).round();
+    } else {
+      mealCalories = int.parse(foodData["calories"] ?? "0");
+      mealCarbs = double.parse(foodData["carbs"] ?? "0").round();
+      mealProtein = double.parse(foodData["protein"] ?? "0").round();
+      mealFats = double.parse(foodData["fats"] ?? "0").round();
+    }
 
-    await updateDailyCalories(mealCalories, mealCarbs, mealProtein, mealFats, true);
+    await updateDailyCalories(mealCalories, mealCarbs, mealProtein, mealFats, water, true);
 
     notifyListeners();
   }
@@ -106,12 +119,17 @@ class UserProvider with ChangeNotifier {
     var foodIntakeToDelete = foodIntakes[mealTime]!.firstWhere(
           (food) => int.parse(food["id"]!) == id
     );
-    int mealCalories = int.parse(foodIntakeToDelete["calories"] ?? "0");
-    int mealCarbs = (double.parse(foodIntakeToDelete["carbs"] ?? "0")).round();
-    int mealProtein = (double.parse(foodIntakeToDelete["protein"] ?? "0")).round();
-    int mealFats = (double.parse(foodIntakeToDelete["fats"] ?? "0")).round();
+    int water = 0, mealCalories = 0, mealCarbs = 0, mealProtein = 0, mealFats = 0;
+    if (foodIntakeToDelete["name"] == "water") {
+      water = (double.parse(foodIntakeToDelete["quantity"] ?? "0")).round();
+    } else {
+      mealCalories = int.parse(foodIntakeToDelete["calories"] ?? "0");
+      mealCarbs = (double.parse(foodIntakeToDelete["carbs"] ?? "0")).round();
+      mealProtein = (double.parse(foodIntakeToDelete["protein"] ?? "0")).round();
+      mealFats = (double.parse(foodIntakeToDelete["fats"] ?? "0")).round();
+    }
 
-    await updateDailyCalories(mealCalories, mealCarbs, mealProtein, mealFats, false);
+    await updateDailyCalories(mealCalories, mealCarbs, mealProtein, mealFats, water, false);
 
     foodIntakes[mealTime]!.removeWhere((food) => int.parse(food["id"]!) == id);
     String jsonFoodIntakes = jsonEncode(foodIntakes);
@@ -120,17 +138,21 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateFoodIntakeInProvider(int id, String mealTime, double newQuantity) async {
+  Future<void> updateFoodIntake(int id, String mealTime, double newQuantity) async {
     final prefs = await SharedPreferences.getInstance();
     var foodIntakeToUpdate = foodIntakes[mealTime]!.firstWhere(
           (food) => int.parse(food["id"]!) == id
     );
-    int oldMealCalories = int.parse(foodIntakeToUpdate["calories"] ?? "0");
-    int oldMealCarbs = (double.parse(foodIntakeToUpdate["carbs"] ?? "0")).round();
-    int oldMealProtein = (double.parse(foodIntakeToUpdate["protein"] ?? "0")).round();
-    int oldMealFats = (double.parse(foodIntakeToUpdate["fats"] ?? "0")).round();
-
-    await updateDailyCalories(oldMealCalories, oldMealCarbs, oldMealProtein, oldMealFats, false);
+    int oldWater = 0, oldMealCalories = 0, oldMealCarbs = 0, oldMealProtein = 0, oldMealFats = 0;
+    if (foodIntakeToUpdate["name"] == "water") {
+      oldWater = (double.parse(foodIntakeToUpdate["quantity"] ?? "0")).round();
+    } else {
+      oldMealCalories = int.parse(foodIntakeToUpdate["calories"] ?? "0");
+      oldMealCarbs = (double.parse(foodIntakeToUpdate["carbs"] ?? "0")).round();
+      oldMealProtein = (double.parse(foodIntakeToUpdate["protein"] ?? "0")).round();
+      oldMealFats = (double.parse(foodIntakeToUpdate["fats"] ?? "0")).round();
+    }
+    await updateDailyCalories(oldMealCalories, oldMealCarbs, oldMealProtein, oldMealFats, oldWater, false);
 
     foodIntakeToUpdate["quantity"] = newQuantity.toString();
     foodIntakeToUpdate["calories"] = ((int.tryParse(foodIntakeToUpdate["caloriesPer100g"]!)!) * (newQuantity / 100)).toInt().toString();
@@ -139,14 +161,19 @@ class UserProvider with ChangeNotifier {
     foodIntakeToUpdate["protein"] = ((double.tryParse(foodIntakeToUpdate["proteinPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
     foodIntakeToUpdate["sugar"] = ((double.tryParse(foodIntakeToUpdate["sugarPer100g"]!)!) * (newQuantity / 100)).toStringAsFixed(1);
 
-    int newMealCalories = (double.parse(foodIntakeToUpdate["caloriesPer100g"] ?? "0") * (newQuantity / 100)).toInt();
-    int newMealCarbs = (double.parse(foodIntakeToUpdate["carbsPer100g"] ?? "0") * (newQuantity / 100)).round();
-    int newMealProtein = (double.parse(foodIntakeToUpdate["proteinPer100g"] ?? "0") * (newQuantity / 100)).round();
-    int newMealFats = (double.parse(foodIntakeToUpdate["fatsPer100g"] ?? "0") * (newQuantity / 100)).round();
+    int newWater = 0, newMealCalories = 0, newMealCarbs = 0, newMealProtein = 0, newMealFats = 0;
+    if (foodIntakeToUpdate["name"] == "water") {
+      newWater = (double.parse(foodIntakeToUpdate["quantity"] ?? "0")).round();
+    } else {
+      newMealCalories = (double.parse(foodIntakeToUpdate["caloriesPer100g"] ?? "0") * (newQuantity / 100)).toInt();
+      newMealCarbs = (double.parse(foodIntakeToUpdate["carbsPer100g"] ?? "0") * (newQuantity / 100)).round();
+      newMealProtein = (double.parse(foodIntakeToUpdate["proteinPer100g"] ?? "0") * (newQuantity / 100)).round();
+      newMealFats = (double.parse(foodIntakeToUpdate["fatsPer100g"] ?? "0") * (newQuantity / 100)).round();
+    }
 
     String jsonFoodIntakes = jsonEncode(foodIntakes);
     await prefs.setString("foodIntakes", jsonFoodIntakes);
-    await updateDailyCalories(newMealCalories, newMealCarbs, newMealProtein, newMealFats, true);
+    await updateDailyCalories(newMealCalories, newMealCarbs, newMealProtein, newMealFats, newWater, true);
 
     notifyListeners();
   }
@@ -204,14 +231,18 @@ class UserProvider with ChangeNotifier {
           "Other": []
         };
         int totalCalories = 0;
+        int totalWater = 0;
         for (var foodIntake in intakes) {
           String mealTime = foodIntake["mealTime"].substring(0, 1) +
               foodIntake["mealTime"].substring(1).toLowerCase();
           Map<String, dynamic> food = foodIntake["foodDto"];
-
-          int mealCalories = (food["calories"] * (foodIntake["quantity"] / 100))
-              .toInt();
-
+          int mealCalories = 0, water = 0;
+          if (food["name"] == "water") {
+            water = (foodIntake["quantity"]).round();
+          } else {
+            mealCalories = (food["calories"] * (foodIntake["quantity"] / 100))
+                .toInt();
+          }
           fetchedFoodIntakes[mealTime]!.add({
             "id": foodIntake["id"].toString(),
             "quantity": foodIntake["quantity"].toString(),
@@ -221,6 +252,7 @@ class UserProvider with ChangeNotifier {
             "fats": (food["fats"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
             "protein": (food["protein"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
             "sugar": (food["sugar"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "measurement" : food["measurement"].toString(),
             "caloriesPer100g": food["calories"].toString(),
             "carbsPer100g": food["carbs"].toString(),
             "fatsPer100g": food["fats"].toString(),
@@ -228,8 +260,10 @@ class UserProvider with ChangeNotifier {
             "sugarPer100g": food["sugar"].toString(),
           });
           totalCalories += mealCalories;
+          totalWater += water;
         }
         dailyCalories = totalCalories;
+        dailyWater = totalWater;
         return fetchedFoodIntakes;
       } catch (e) {
         throw Exception(e.toString());
@@ -276,6 +310,7 @@ class UserProvider with ChangeNotifier {
             "fats": (food["fats"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
             "protein": (food["protein"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
             "sugar": (food["sugar"] * (foodIntake["quantity"] / 100)).toStringAsFixed(1),
+            "measurement" : food["measurement"].toString(),
             "caloriesPer100g": food["calories"].toString(),
             "carbsPer100g": food["carbs"].toString(),
             "fatsPer100g": food["fats"].toString(),
@@ -302,18 +337,24 @@ class UserProvider with ChangeNotifier {
         int totalCarbs = 0;
         int totalProtein = 0;
         int totalFats = 0;
+        int totalWater = 0;
         foodIntakesForTheDate.forEach((mealTime, foods) {
           for (var food in foods) {
-            totalCalories += int.parse(food["calories"] ?? "0");
-            totalCarbs += double.parse(food["carbs"] ?? "0").round();
-            totalProtein += double.parse(food["protein"] ?? "0").round();
-            totalFats += double.parse(food["fats"] ?? "0").round();
+            if (food["name"] == "water") {
+              totalWater += (double.parse(food["quantity"] ?? "0")).round();
+            } else {
+              totalCalories += int.parse(food["calories"] ?? "0");
+              totalCarbs += double.parse(food["carbs"] ?? "0").round();
+              totalProtein += double.parse(food["protein"] ?? "0").round();
+              totalFats += double.parse(food["fats"] ?? "0").round();
+            }
           }
         });
         dailyCalories = totalCalories;
         dailyCarbs = totalCarbs;
         dailyProtein = totalProtein;
         dailyFats = totalFats;
+        dailyWater = totalWater;
         await loadExerciseData(date);
       } catch (e) {
         throw Exception(e.toString());
@@ -331,11 +372,13 @@ class UserProvider with ChangeNotifier {
           dailyCarbs = prefs.getInt("dailyCarbs") ?? 0;
           dailyProtein = prefs.getInt("dailyProtein") ?? 0;
           dailyFats = prefs.getInt("dailyFats") ?? 0;
+          dailyWater = prefs.getInt("dailyWater") ?? 0;
           caloriesBurnedL = prefs.getInt("caloriesBurnedL") ?? 0;
           caloriesBurnedCDR = prefs.getInt("caloriesBurnedCDR") ?? 0;
+        } else {
+          await getTotalCalories();
         }
       }
-      await getTotalCalories();
     }
   }
 
@@ -452,32 +495,37 @@ class UserProvider with ChangeNotifier {
     await prefs.setInt("steps", 8000);
   }
 
-  Future<void> updateDailyCalories(int calories, int carbs, int protein, int fats, bool isForSum) async {
+  Future<void> updateDailyCalories(int calories, int carbs, int protein, int fats, int water, bool isForSum) async {
     final prefs = await SharedPreferences.getInstance();
     int currentDailyCalories = prefs.getInt("dailyCalories") ?? 0;
     int currentDailyCarbs = prefs.getInt("dailyCarbs") ?? 0;
     int currentDailyProtein = prefs.getInt("dailyProtein") ?? 0;
     int currentDailyFats = prefs.getInt("dailyFats") ?? 0;
+    int currentDailyWater = prefs.getInt("dailyWater") ?? 0;
     if (isForSum) {
       await prefs.setInt("dailyCalories", currentDailyCalories + calories);
       await prefs.setInt("dailyCarbs", currentDailyCarbs + carbs);
       await prefs.setInt("dailyProtein", currentDailyProtein + protein);
       await prefs.setInt("dailyFats", currentDailyFats + fats);
+      await prefs.setInt("dailyWater", currentDailyWater + water);
 
       dailyCalories = currentDailyCalories + calories;
       dailyCarbs = currentDailyCarbs + carbs;
       dailyProtein = currentDailyProtein + protein;
       dailyFats = currentDailyFats + fats;
+      dailyWater = currentDailyWater + water;
     } else {
       await prefs.setInt("dailyCalories", currentDailyCalories - calories);
       await prefs.setInt("dailyCarbs", currentDailyCarbs - carbs);
       await prefs.setInt("dailyProtein", currentDailyProtein - protein);
       await prefs.setInt("dailyFats", currentDailyFats - fats);
+      await prefs.setInt("dailyWater", currentDailyWater - water);
 
       dailyCalories = currentDailyCalories - calories;
       dailyCarbs = currentDailyCarbs - carbs;
       dailyProtein = currentDailyProtein - protein;
       dailyFats = currentDailyFats - fats;
+      dailyWater = currentDailyWater - water;
     }
     notifyListeners();
   }
@@ -542,7 +590,7 @@ class UserProvider with ChangeNotifier {
     dailyProtein = 0;
     dailyCarbs = 0;
     dailyFats = 0;
-    dailyWater = 0.0;
+    dailyWater = 0;
     steps = 0;
     calories = 0;
     protein = 0;
