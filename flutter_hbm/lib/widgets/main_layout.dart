@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/widgets/vertical_scroll.dart';
 import 'package:flutter_hbm/widgets/widgets_for_main_page.dart';
+import 'package:provider/provider.dart';
 
 import '../screens/profile_settings.dart';
+import '../screens/provider/user_provider.dart';
 
 class AppLayout extends StatelessWidget {
   final Widget child;
@@ -10,6 +12,7 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: true);
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(100),
@@ -32,13 +35,26 @@ class AppLayout extends StatelessWidget {
                 ),
                 Expanded(
                   child: Center(
-                    child: Text(
-                      "Hello, how are you today, Vasko!  :)",
-                      style: TextStyle(
-                        fontSize: 22,
-                        color: Colors.black54,
-                      ),
+                    child: RichText(
                       textAlign: TextAlign.center,
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: "Hello, how are you today, ${userProvider.firstName}! ",
+                            style: TextStyle(
+                              fontSize: 22,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          TextSpan(
+                            text: "😊",
+                            style: TextStyle(
+                              fontFamily: 'NotoColorEmoji',
+                              fontSize: 22,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
