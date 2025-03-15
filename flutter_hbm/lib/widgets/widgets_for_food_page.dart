@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-Widget buildMealSection(String mealSection, Map<String, List<Map<String, String>>> foodIntakes,
+Widget buildMealSection(String mealSection, String emoji, Map<String, List<Map<String, String>>> foodIntakes,
     Function(int?, String?) onSelectFoodIntake, int? selectedFoodIntakeId) {
   return LayoutBuilder(
     builder: (context, constraints) {
@@ -11,9 +11,20 @@ Widget buildMealSection(String mealSection, Map<String, List<Map<String, String>
         children: [
           Row(
             children: [
-              Text(
-                mealSection,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                        text: "$mealSection ",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                    ),
+                    TextSpan(
+                      text: emoji,
+                      style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

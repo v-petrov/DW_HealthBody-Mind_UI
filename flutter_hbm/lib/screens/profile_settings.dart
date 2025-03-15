@@ -274,8 +274,20 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text("Your Profile:", style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                  text: "Your Profile: ",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                              ),
+                              TextSpan(
+                                text: "📸",
+                                style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         SizedBox(height: 15),
                         ProfilePictureWidget(),
@@ -337,8 +349,20 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text("Your Goals:", style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                  text: "Your Goals: ",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                              ),
+                              TextSpan(
+                                text: "📈",
+                                style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,9 +375,20 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   SizedBox(height: 60),
-                                  Text(
-                                    "Nutrition Goals:",
-                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                            text: "Nutrition Goals: ",
+                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                                        ),
+                                        TextSpan(
+                                          text: "📊",
+                                          style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   SizedBox(height: 60),
                                   buildGoalRow("Calories:", "${userProvider.calories}"),
@@ -568,12 +603,22 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     SizedBox(height: 40),
-                                    Text(
-                                      "Weight Goals:",
-                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                              text: "Weight Goals: ",
+                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+                                          ),
+                                          TextSpan(
+                                            text: "⚖️",
+                                            style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                     SizedBox(height: 40),
-
                                     Padding(
                                       padding: const EdgeInsets.only(bottom: 10.0),
                                       child: Row(

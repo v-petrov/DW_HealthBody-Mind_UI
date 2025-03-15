@@ -211,7 +211,21 @@ class ExercisePageState extends State<ExercisePage> {
                           ],
                         ),
                         SizedBox(height: 10),
-                        Text("Cardio:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                  text: "Cardio: ",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                              ),
+                              TextSpan(
+                                text: "🏃‍♂️💨",
+                                style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         SizedBox(height: 10),
                         Row(
                           children: [
@@ -407,7 +421,21 @@ class ExercisePageState extends State<ExercisePage> {
                     child: Column(
                       children: [
                         SizedBox(height: 67),
-                        Text("Lifting:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                  text: "Lifting: ",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                              ),
+                              TextSpan(
+                                text: "🏋️‍♂️💥",
+                                style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         SizedBox(height: 10),
                         Container(
                           padding: EdgeInsets.all(10),

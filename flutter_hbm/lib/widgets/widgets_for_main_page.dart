@@ -70,7 +70,7 @@ Widget buildGoalProgressCircle(double progress, String text, Color progressColor
   );
 }
 
-Widget buildMacroCircle(double progress, String text, Color progressColor, String macroName, String goalText, String percentage) {
+Widget buildMacroCircle(double progress, String text, Color progressColor, String macroName, String emoji, String goalText, String percentage) {
   return Column(
     children: [
       Stack(
@@ -104,9 +104,20 @@ Widget buildMacroCircle(double progress, String text, Color progressColor, Strin
         ],
       ),
       SizedBox(height: 10),
-      Text(
-        macroName,
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+                text: "$macroName ",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+            ),
+            TextSpan(
+              text: emoji,
+              style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 16,
+              ),
+            ),
+          ],
+        ),
       ),
       Text(
         goalText,

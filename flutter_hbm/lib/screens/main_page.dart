@@ -118,11 +118,53 @@ class MainPageState extends State<MainPage> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 SizedBox(height: 20),
-                                Text("Goal", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: "Goal ",
+                                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)
+                                      ),
+                                      TextSpan(
+                                        text: "🎯",
+                                        style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 15,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 Text("$goalCalories cal", style: TextStyle(fontSize: 14)),
-                                Text("Food", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: "Food ",
+                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)
+                                      ),
+                                      TextSpan(
+                                        text: "🍎",
+                                        style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 15,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 Text("${userProvider.dailyCalories} cal", style: TextStyle(fontSize: 14)),
-                                Text("Training", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: "Training ",
+                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)
+                                      ),
+                                      TextSpan(
+                                        text: "💪",
+                                        style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 15,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 Text("${userProvider.caloriesBurnedL + userProvider.caloriesBurnedCDR} cal", style: TextStyle(fontSize: 14)),
                               ],
                             ),
@@ -140,8 +182,22 @@ class MainPageState extends State<MainPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                SizedBox(width: 60),
-                                Text("Goal", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                SizedBox(width: 65),
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: "Goal ",
+                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)
+                                      ),
+                                      TextSpan(
+                                        text: "💧",
+                                        style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 15,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 Text("$goalWater ml", style: TextStyle(fontSize: 14)),
                               ],
                             ),
@@ -168,13 +224,13 @@ class MainPageState extends State<MainPage> {
                           children: [
                             buildMacroCircle(calculatesProgress(userProvider.dailyCarbs, userProvider.carbs),
                               "${userProvider.carbs - userProvider.dailyCarbs} g", Colors.blue,
-                              "Carbs", "Goal: ${userProvider.carbs} g", "$carbsProc%"),
+                              "Carbs", "🍞", "Goal: ${userProvider.carbs} g", "$carbsProc%"),
                             buildMacroCircle(calculatesProgress(userProvider.dailyProtein, userProvider.protein),
                                 "${userProvider.protein - userProvider.dailyProtein} g", Colors.blue,
-                                "Protein", "Goal: ${userProvider.protein} g", "$proteinProc%"),
+                                "Protein", "🍗", "Goal: ${userProvider.protein} g", "$proteinProc%"),
                             buildMacroCircle(calculatesProgress(userProvider.dailyFats, userProvider.fats),
                                 "${userProvider.fats - userProvider.dailyFats} g", Colors.blue,
-                                "Fats", "Goal: ${userProvider.fats} g", "$fatsProc%")
+                                "Fats", "🥑", "Goal: ${userProvider.fats} g", "$fatsProc%")
                           ],
                         ),
                       ],
