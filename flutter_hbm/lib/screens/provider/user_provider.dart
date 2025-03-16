@@ -602,6 +602,31 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateProfilePicture(String newImageUrl) async {
+    final prefs = await SharedPreferences.getInstance();
+    imageUrl = newImageUrl;
+    await prefs.setString("imageUrl", imageUrl);
+    notifyListeners();
+  }
+
+  Future<void> loadProfilePicture() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey("imageUrl")) {
+      imageUrl = prefs.getString("imageUrl")!;
+      return;
+    }
+    try {
+      final response = await UserService.getProfilePicture();
+      if (response["profilePictureUrl"] != null && response["profilePictureUrl"]!.isNotEmpty) {
+        imageUrl = response["profilePictureUrl"]!;
+        prefs.setString("imageUrl", imageUrl);
+        notifyListeners();
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
   bool isSelectedDateNotToday(String date) {
     DateTime selectedDate = DateTime.parse(date);
 

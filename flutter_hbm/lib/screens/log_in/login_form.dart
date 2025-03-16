@@ -53,6 +53,7 @@ class LoginFormState extends State<LoginForm> {
         await userProvider.loadUserProfile(false);
         await userProvider.loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
         await userProvider.loadExerciseData(DateTime.now().toIso8601String().split("T")[0]);
+        await userProvider.loadProfilePicture();
 
         if (!mounted) return;
         Navigator.pushReplacement(

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hbm/screens/log_in/login_form.dart';
 import 'package:flutter_hbm/screens/main_page.dart';
@@ -10,6 +12,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
   runApp(
     MultiProvider(
       providers: [
@@ -51,6 +58,7 @@ class MyAppState extends State<MyApp> {
         await userProvider.loadUserProfile(false);
         await userProvider.loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
         await userProvider.loadExerciseData(DateTime.now().toIso8601String().split("T")[0]);
+        await userProvider.loadProfilePicture();
         setState(() {
           initialScreen = MainPage();
         });

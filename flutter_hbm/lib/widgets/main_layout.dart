@@ -72,10 +72,19 @@ class AppLayout extends StatelessWidget {
                           MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
                         );
                       },
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.grey[300],
-                        child: Icon(Icons.person, color: Colors.white),
+                      child: Consumer<UserProvider>(
+                        builder: (context, userProvider, child) {
+                          return CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Colors.grey[300],
+                            backgroundImage: userProvider.imageUrl.isNotEmpty
+                                ? NetworkImage(userProvider.imageUrl)
+                                : null,
+                            child: userProvider.imageUrl.isEmpty
+                                ? Icon(Icons.person, color: Colors.white)
+                                : null,
+                          );
+                        },
                       ),
                     ),
                   ],
