@@ -24,11 +24,19 @@ class MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    initFields();
     dateListening();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dateProvider = Provider.of<DateProvider>(context, listen: false);
       dateProvider.updateDate(context, DateTime.now(), "main");
     });
+  }
+
+  void initFields() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    goalCalories = userProvider.calories;
+    goalWater = (userProvider.water * 1000).toInt();
+    calculatePercentage(userProvider.calories, userProvider.carbs, userProvider.fats, userProvider.protein);
   }
 
   void dateListening() {

@@ -50,7 +50,7 @@ class UserProvider with ChangeNotifier {
     await prefs.setString("foodIntakes", foodIntakesString);
     foodIntakes = newFoodIntakes;
 
-    notifyListeners();
+    // notifyListeners();
   }
 
   Future<void> getTotalCalories() async {
@@ -111,7 +111,7 @@ class UserProvider with ChangeNotifier {
 
     await updateDailyCalories(mealCalories, mealCarbs, mealProtein, mealFats, water, true);
 
-    notifyListeners();
+    // notifyListeners();
   }
 
   Future<void> deleteFoodIntake(int id, String mealTime) async {
@@ -135,7 +135,7 @@ class UserProvider with ChangeNotifier {
     String jsonFoodIntakes = jsonEncode(foodIntakes);
     await prefs.setString("foodIntakes", jsonFoodIntakes);
 
-    notifyListeners();
+    // notifyListeners();
   }
 
   Future<void> updateFoodIntake(int id, String mealTime, double newQuantity) async {
@@ -175,7 +175,7 @@ class UserProvider with ChangeNotifier {
     await prefs.setString("foodIntakes", jsonFoodIntakes);
     await updateDailyCalories(newMealCalories, newMealCarbs, newMealProtein, newMealFats, newWater, true);
 
-    notifyListeners();
+    // notifyListeners();
   }
 
   Future<void> loadExerciseData(String date) async {

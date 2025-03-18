@@ -41,17 +41,25 @@ class FoodPageState extends State<FoodPage> {
   @override
   void initState() {
     super.initState();
+    initFields();
     dateListening();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dateProvider = Provider.of<DateProvider>(context, listen: false);
       dateProvider.updateDate(context, DateTime.now(), "food");
     });
   }
+
   @override
   void dispose() {
     searchController.dispose();
     quantityController.dispose();
     super.dispose();
+  }
+
+  void initFields() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    foodIntakes = userProvider.foodIntakes;
+    totalCalories = userProvider.dailyCalories;
   }
 
   void dateListening() {

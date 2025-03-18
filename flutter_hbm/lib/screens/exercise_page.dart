@@ -35,6 +35,7 @@ class ExercisePageState extends State<ExercisePage> {
   @override
   void initState() {
     super.initState();
+    initFields();
     controllersListening();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dateProvider = Provider.of<DateProvider>(context, listen: false);
@@ -52,6 +53,14 @@ class ExercisePageState extends State<ExercisePage> {
     caloriesBurnedControllerC.dispose();
     stepsController.dispose();
     super.dispose();
+  }
+
+  void initFields() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    caloriesBurnedControllerL.text = userProvider.caloriesBurnedL.toString();
+    caloriesBurnedControllerCRD.text = userProvider.caloriesBurnedCDR.toString();
+    hoursControllerCDR.text = userProvider.hoursCDR.toString();
+    minutesControllerCDR.text = userProvider.minutesCDR.toString();
   }
 
   Future<void> loadExerciseData(String date) async {

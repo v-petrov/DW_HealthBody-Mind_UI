@@ -53,9 +53,10 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      await loadData();
-    });
+    // Future.microtask(() async {
+    //   await loadData();
+    // });
+    loadData();
   }
 
   @override
@@ -170,13 +171,13 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     return carbs * 4 + protein * 4 + fats * 9;
   }
 
-  Future<void> loadData() async {
+  void loadData() {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    await userProvider.loadUserProfile(false);
+    // await userProvider.loadUserProfile(false);
     newGoal = userProvider.goal;
     newWeeklyGoal = userProvider.weeklyGoal;
     newActivityLevel = userProvider.activityLevel;
-    weightController = TextEditingController(text: "${userProvider.weight}KG");
+    weightController.text = "${userProvider.weight}KG";
     goalWeightController = TextEditingController(text: "${userProvider.goalWeight}KG");
     stepsController = TextEditingController(text: "${userProvider.steps}");
     carbsController.text = userProvider.carbs.toString();

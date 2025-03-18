@@ -8,8 +8,11 @@ class DateProvider with ChangeNotifier {
   String? get currentPage => currentPageState;
 
   void updateDate(BuildContext context, DateTime newDate, String page) {
-    if (selectedDateState != newDate || currentPageState != page) {
-      selectedDateState = newDate;
+    DateTime currentDateOnly = DateTime(selectedDateState.year, selectedDateState.month, selectedDateState.day);
+    DateTime newDateOnly = DateTime(newDate.year, newDate.month, newDate.day);
+
+    if (currentDateOnly != newDateOnly || currentPageState != page) {
+      selectedDateState = newDateOnly;
       currentPageState = page;
       notifyListeners();
     }
