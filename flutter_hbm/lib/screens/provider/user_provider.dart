@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hbm/screens/services/chat_recommendation_service.dart';
 import 'package:flutter_hbm/screens/services/exercise_service.dart';
 import 'package:flutter_hbm/screens/services/user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_hbm/screens/utils/notification_item.dart';
+import 'package:flutter_hbm/screens/utils/formatters.dart';
 
 import '../services/food_service.dart';
 
@@ -37,12 +40,40 @@ class UserProvider with ChangeNotifier {
   int minutesCDR = 0;
   double water = 0.0;
   String imageUrl = "";
+  String dailyRecommendation = "";
   Map<String, List<Map<String, String>>> foodIntakes = {
     "Breakfast": [],
     "Lunch": [],
     "Dinner": [],
     "Other": []
   };
+  List<NotificationItem> notifications = [];
+  bool hasNewNotification = false;
+
+  Future<void> saveNotification(NotificationItem notification) async {
+    notifications.insert(0, notification);
+    hasNewNotification = true;
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> encoded = notifications.map((n) => jsonEncode(n.toJson())).toList();
+    await prefs.setStringList('notifications', encoded);
+    notifyListeners();
+  }
+
+  Future<void> loadNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey("notifications")) {
+      List<String> savedNotifications = prefs.getStringList('notifications')!;
+      notifications = savedNotifications
+          .map((string) => NotificationItem.fromJson(jsonDecode(string)))
+          .toList();
+      notifyListeners();
+    }
+  }
+
+  void markNotificationsAsRead() {
+    hasNewNotification = false;
+    notifyListeners();
+  }
 
   Future<void> setFoodIntakes(Map<String, List<Map<String, String>>> newFoodIntakes) async {
     final prefs = await SharedPreferences.getInstance();
@@ -180,7 +211,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> loadExerciseData(String date) async {
     final prefs = await SharedPreferences.getInstance();
-    if (isSelectedDateNotToday(date)) {
+    if (DateFormatter.isSelectedDateNotToday(date)) {
       try {
         final exerciseData = await ExerciseService.getExerciseDataByDate(date);
         caloriesBurnedL = exerciseData["caloriesBurnedL"];
@@ -221,7 +252,7 @@ class UserProvider with ChangeNotifier {
 
   Future<Map<String, List<Map<String, String>>>> loadFoodIntakes(String date) async {
     final prefs = await SharedPreferences.getInstance();
-    if (isSelectedDateNotToday(date)) {
+    if (DateFormatter.isSelectedDateNotToday(date)) {
       try {
         List<dynamic> intakes = await FoodService.getFoodIntakesByDate(date);
         Map<String, List<Map<String, String>>> fetchedFoodIntakes = {
@@ -328,9 +359,48 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<void> loadDailyRecommendation(String date) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userDynamicData = {
+      "weight": weight,
+      "goalWeight": goalWeight,
+      "goal": goal,
+      "weeklyGoal": weeklyGoal,
+      "activityLevel": activityLevel,
+      "steps": steps,
+      "calories": calories,
+      "protein": protein,
+      "carbs": carbs,
+      "fats": fats,
+      "water": water,
+      "date": date
+    };
+    if (DateFormatter.isSelectedDateNotToday(date)) {
+      try {
+        final response = await ChatRecommendationService.getDailyRecommendation(userDynamicData);
+        dailyRecommendation = response["dailyRecommendation"];
+        if (response["dailyRecommendation"] == "") {
+          dailyRecommendation = "Missing daily recommendation!";
+          return;
+        }
+      } catch (e){
+        throw Exception(e.toString());
+      }
+    } else {
+      if (prefs.containsKey("dailyRecommendation")) {
+        dailyRecommendation = prefs.getString("dailyRecommendation")!;
+      } else {
+        final response = await ChatRecommendationService.getDailyRecommendation(userDynamicData);
+        await prefs.setString("dailyRecommendation", response["dailyRecommendation"]);
+        dailyRecommendation = response["dailyRecommendation"];
+      }
+    }
+    notifyListeners();
+  }
+
   Future<void> loadUserCalories(String date) async {
     final prefs = await SharedPreferences.getInstance();
-    if (isSelectedDateNotToday(date)) {
+    if (DateFormatter.isSelectedDateNotToday(date)) {
       try {
         final foodIntakesForTheDate = await loadFoodIntakes(date);
         int totalCalories = 0;
@@ -532,7 +602,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> updateCaloriesBurned(int caloriesBurned, bool isLifting, String date ,{int hoursC = 0, int minutesC = 0, int steps = 0}) async {
     if (isLifting) {
-      if (isSelectedDateNotToday(date)) {
+      if (DateFormatter.isSelectedDateNotToday(date)) {
         caloriesBurnedL += caloriesBurned;
       } else {
         final prefs = await SharedPreferences.getInstance();
@@ -541,7 +611,7 @@ class UserProvider with ChangeNotifier {
         caloriesBurnedL = currentCaloriesBurnedL + caloriesBurned;
       }
     } else {
-      if (isSelectedDateNotToday(date)) {
+      if (DateFormatter.isSelectedDateNotToday(date)) {
         if (minutesCDR + minutesC >= 60) {
           hoursCDR += ((minutesCDR + minutesC) / 60).toInt();
           minutesCDR -= 60;
@@ -599,6 +669,8 @@ class UserProvider with ChangeNotifier {
     water = 0.0;
     imageUrl = "";
     foodIntakes.clear();
+    notifications.clear();
+    hasNewNotification = false;
     notifyListeners();
   }
 
@@ -625,13 +697,5 @@ class UserProvider with ChangeNotifier {
     } catch (e) {
       throw Exception(e.toString());
     }
-  }
-
-  bool isSelectedDateNotToday(String date) {
-    DateTime selectedDate = DateTime.parse(date);
-
-    DateTime currentDate = DateTime.now();
-    currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
-    return selectedDate.isBefore(currentDate) || selectedDate.isAfter(currentDate);
   }
 }
