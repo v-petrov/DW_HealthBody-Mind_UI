@@ -69,6 +69,22 @@ class DateFormatter {
   static String formatDate(DateTime date) {
     return "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
   }
+  static String timeAgoSinceCreated(DateTime dateTime) {
+    final now = DateTime.now();
+    final diff = now.difference(dateTime);
+
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
+    if (diff.inHours < 24) return '${diff.inHours} hours ago';
+    return '${diff.inDays} days ago';
+  }
+  static bool isSelectedDateNotToday(String date) {
+    DateTime selectedDate = DateTime.parse(date);
+
+    DateTime currentDate = DateTime.now();
+    currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
+    return selectedDate.isBefore(currentDate) || selectedDate.isAfter(currentDate);
+  }
 }
 
 class ProfilePageStringFormatter {

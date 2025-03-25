@@ -136,7 +136,7 @@ class FoodPageState extends State<FoodPage> {
     if (!mounted) return;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final dateProvider = Provider.of<DateProvider>(context, listen: false);
-    bool isDateNotToday = userProvider.isSelectedDateNotToday(dateProvider.selectedDate.toIso8601String().split("T")[0]);
+    bool isDateNotToday = DateFormatter.isSelectedDateNotToday(dateProvider.selectedDate.toIso8601String().split("T")[0]);
 
     try {
       await FoodService.deleteFoodIntake(id);
@@ -170,7 +170,7 @@ class FoodPageState extends State<FoodPage> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final dateProvider = Provider.of<DateProvider>(context, listen: false);
     double newQuantity = double.parse(quantityController.text);
-    bool isDateNotToday = userProvider.isSelectedDateNotToday(dateProvider.selectedDate.toIso8601String().split("T")[0]);
+    bool isDateNotToday = DateFormatter.isSelectedDateNotToday(dateProvider.selectedDate.toIso8601String().split("T")[0]);
 
     if (double.parse(foodChanged?["quantity"]) != newQuantity) {
       Map<String, dynamic> updateFoodIntake = {
@@ -273,7 +273,7 @@ class FoodPageState extends State<FoodPage> {
         "sugarPer100g": selectedFood!["sugar"].toString(),
       };
 
-      bool isDateNotToday = userProvider.isSelectedDateNotToday(formattedDate);
+      bool isDateNotToday = DateFormatter.isSelectedDateNotToday(formattedDate);
       if (isDateNotToday) {
         foodIntakes[selectedMealTime]!.add(foodData);
         if (foodData["name"] == "water") {
