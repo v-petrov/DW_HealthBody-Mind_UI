@@ -11,6 +11,9 @@ class GenericChartWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (chartData.isEmpty || chartData.values.every((v) => v == 0)) {
+      return Text("No data available yet to show a chart!");
+    }
     List<String> dates = chartData.keys.toList();
     List<double> values = chartData.values.map((e) => (e as num).toDouble()).toList();
     double maxY = values.isNotEmpty ? values.reduce((a, b) => a > b ? a : b) : 0;
