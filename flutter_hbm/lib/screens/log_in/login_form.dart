@@ -3,6 +3,7 @@ import 'package:flutter_hbm/screens/log_in/forgot_password.dart';
 import 'package:flutter_hbm/screens/log_in/sign_up_part_one.dart';
 import 'package:flutter_hbm/screens/main_page.dart';
 import 'package:flutter_hbm/screens/utils/token_helper.dart';
+import 'package:flutter_hbm/screens/utils/notification_item.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -53,12 +54,19 @@ class LoginFormState extends State<LoginForm> {
         await userProvider.loadUserProfile(false);
         await userProvider.loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
         await userProvider.loadExerciseData(DateTime.now().toIso8601String().split("T")[0]);
+        await userProvider.loadDailyRecommendation(DateTime.now().toIso8601String().split("T")[0]);
         await userProvider.loadProfilePicture();
+
+        final welcomeNotification = NotificationItem(
+          message: "👋Welcome back, ${userProvider.firstName}!",
+          timestamp: DateTime.now(),
+        );
+        await userProvider.saveNotification(welcomeNotification);
 
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MainPage()),
+          MaterialPageRoute(builder: (context) => MainPage(showWelcomeNotification: true)),
         );
 
       } catch (e) {

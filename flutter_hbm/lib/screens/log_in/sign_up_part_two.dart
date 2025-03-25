@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hbm/screens/main_page.dart';
 import 'package:flutter_hbm/screens/utils/validators.dart';
+import 'package:flutter_hbm/screens/utils/notification_item.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -62,6 +63,13 @@ class SignUpPartTwoState extends State<SignUpPartTwo> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       await userProvider.setUserDataAfterRegistration(widget.userData);
       await userProvider.loadUserProfile(true);
+      await userProvider.loadDailyRecommendation(DateTime.now().toIso8601String().split("T")[0]);
+
+      final welcomeNotification = NotificationItem(
+        message: "🎉Welcome to HealthBody&Mind, ${userProvider.firstName}, have fun and stay healthy!",
+        timestamp: DateTime.now(),
+      );
+      await userProvider.saveNotification(welcomeNotification);
 
       if (!mounted) return;
       Navigator.pushReplacement(
