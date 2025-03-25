@@ -59,6 +59,7 @@ class MyAppState extends State<MyApp> {
         await userProvider.loadFoodIntakes(DateTime.now().toIso8601String().split("T")[0]);
         await userProvider.loadExerciseData(DateTime.now().toIso8601String().split("T")[0]);
         await userProvider.loadProfilePicture();
+        await userProvider.loadNotifications();
         setState(() {
           initialScreen = MainPage();
         });

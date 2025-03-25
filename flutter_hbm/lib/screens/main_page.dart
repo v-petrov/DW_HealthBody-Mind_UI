@@ -3,13 +3,15 @@ import 'package:flutter_hbm/screens/provider/date_provider.dart';
 import 'package:flutter_hbm/screens/provider/user_provider.dart';
 import 'package:flutter_hbm/widgets/horizontal_scroll.dart';
 import 'package:flutter_hbm/widgets/vertical_scroll.dart';
+import 'package:flutter_hbm/screens/utils/notification_item.dart';
 import 'package:provider/provider.dart';
 import '../widgets/widgets_for_main_page.dart';
 import '../widgets/calendar.dart';
 import '../widgets/main_layout.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final bool showWelcomeNotification;
+  const MainPage({super.key, this.showWelcomeNotification = false});
 
   @override
   State<MainPage> createState() =>  MainPageState();
@@ -45,16 +47,18 @@ class MainPageState extends State<MainPage> {
       if (dateProvider.currentPage! == "main") {
         if (!mounted) return;
         Future.microtask(() async {
-          await loadUserCalories(dateProvider.selectedDate.toIso8601String().split("T")[0]);
+          await loadMainPageData(dateProvider.selectedDate.toIso8601String().split("T")[0]);
         });
       }
     });
   }
 
-  Future<void> loadUserCalories(String date) async {
+  Future<void> loadMainPageData(String date) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
       await userProvider.loadUserCalories(date);
+      await userProvider.loadDailyRecommendation(date);
+      checkAndNotifyGoals();
       setState(() {
         goalCalories = userProvider.calories;
         goalWater = (userProvider.water * 1000).toInt();
@@ -77,10 +81,35 @@ class MainPageState extends State<MainPage> {
     return (consumed / goal).clamp(0.0, 1.0);
   }
 
+  Future<void> checkAndNotifyGoals() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final goalsReached = <String, bool> {
+      "Water": userProvider.dailyWater >= (userProvider.water * 1000).toInt(),
+      "Protein": userProvider.dailyProtein >= userProvider.protein,
+      "Carbs": userProvider.dailyCarbs >= userProvider.carbs,
+      "Fats": userProvider.dailyFats >= userProvider.fats,
+    };
+
+    for (var entry in goalsReached.entries) {
+      if (entry.value) {
+        final existing = userProvider.notifications.any((n) =>
+            n.message.contains("reached your ${entry.key.toLowerCase()} goal"));
+        if (!existing) {
+          final notification = NotificationItem(
+            message: "🎉Congratulations! You've reached your ${entry.key.toLowerCase()} goal!",
+            timestamp: DateTime.now(),
+          );
+          await userProvider.saveNotification(notification);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context, listen: true);
     return AppLayout(
+      showWelcomeNotification: widget.showWelcomeNotification,
       child: LayoutBuilder(
         builder: (context, constraints) {
           double minWidth = 1000;
@@ -184,7 +213,7 @@ class MainPageState extends State<MainPage> {
                           children: [
                             buildGoalProgressCircle(
                               calculatesProgress(userProvider.dailyWater, goalWater),
-                              "${userProvider.water - userProvider.dailyWater / 1000} L",
+                              "${(userProvider.water - userProvider.dailyWater / 1000).toStringAsFixed(3)} L",
                               Colors.blue,
                             ),
                             Column(
@@ -256,18 +285,32 @@ class MainPageState extends State<MainPage> {
                     child: Column(
                       children: [
                         DateSelectionWidget(page: "main"),
-                        SizedBox(height: 10),
-                        Container(
-                          padding: EdgeInsets.all(15),
-                          width: double.infinity,
-                          height: screenHeight,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black, width: 2),
+                        SizedBox(height: 70),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                  text: "Daily recommendation: ",
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                              ),
+                              TextSpan(
+                                text: "💡",
+                                style: TextStyle(fontFamily: 'NotoColorEmoji', fontSize: 18,
+                                ),
+                              ),
+                            ],
                           ),
-                          child: Text(
-                            "Recommendations & Advices",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 18),
+                        ),
+                        SizedBox(height: 5),
+                        Divider(thickness: 2, color: Colors.black),
+
+                        SizedBox(height: 10),
+                        Text(
+                          userProvider.dailyRecommendation,
+                          textAlign: TextAlign.justify,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
                       ],
