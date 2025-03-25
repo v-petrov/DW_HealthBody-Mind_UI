@@ -71,9 +71,11 @@ class ProfilePictureWidgetState extends State<ProfilePictureWidget> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
       await userProvider.loadProfilePicture();
-      setState(() {
-        profilePictureUrl = userProvider.imageUrl;
-      });
+      if (userProvider.imageUrl.isNotEmpty) {
+        setState(() {
+          profilePictureUrl = userProvider.imageUrl;
+        });
+      }
     } catch (e) {
       throw Exception(e.toString());
     }
